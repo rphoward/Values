@@ -1,0 +1,182 @@
+{
+  "system_metadata": {
+    "framework": "Value Proposition Canvas",
+    "authors": [
+      "Alex Osterwalder",
+      "Yves Pigneur",
+      "Greg Bernarda",
+      "Alan Smith"
+    ],
+    "version": "1.1",
+    "grounding_source": "Value Proposition Design: How to Create Products Customers Want (2015)"
+  },
+  "visual_grounding_analogies": {
+    "spreadsheet_mirage": {
+      "analogy": "Building detailed spreadsheets that are completely made up and turn out to be wrong instead of field testing.",
+      "action": "Force quick, low-fidelity validations; forbid premature financial modeling."
+    },
+    "cognitive_murder": {
+      "analogy": "Overwhelming stakeholders with too much abstract information at once during presentations.",
+      "action": "Present information progressively, sticky note by sticky note, in visual formats."
+    },
+    "business_killer_bomb": {
+      "analogy": "The lit fuse representing the most critical, unvalidated hypotheses that could blow up the entire business.",
+      "action": "Rank and test the most critical survival assumptions first before optimizing secondary elements."
+    },
+    "earlyvangelist_ladder": {
+      "analogy": "Steve Blank's 5-stage earlyvangelist model: 1. Has problem -> 2. Aware of problem -> 3. Actively searching -> 4. Cobbled together solution -> 5. Has/can acquire budget.",
+      "action": "Profile early adopters strictly based on their climb up this ladder."
+    },
+    "pregnant_man_trap": {
+      "analogy": "The False Positive trap where testing data misleads you to see patterns that are not there (e.g. diagnosing a man as pregnant).",
+      "action": "Test customer actions (willingness to invest/pay) rather than spoken words or opinions."
+    },
+    "local_maximum_hill": {
+      "analogy": "Climbing a small hill and optimizing for a mediocre model when a much larger global maximum mountain exists next to it.",
+      "action": "Focus on learning and testing alternative business models before locking in and optimizing features."
+    }
+  },
+  "customer_profile_triggers": {
+    "supporting_jobs": {
+      "buyer_of_value": [
+        "How do customers compare offers?",
+        "How do they decide on a purchase?",
+        "What checkout, payment, or delivery obstacles do they encounter?"
+      ],
+      "cocreator_of_value": [
+        "How do customers provide reviews or design feedback?",
+        "How do they participate in product development?"
+      ],
+      "transferrer_of_value": [
+        "How do customers cancel subscriptions or dispose of products?",
+        "How do they resell, transfer, or recycle the offering?"
+      ]
+    },
+    "job_importance_scale": ["crucial", "important", "insignificant"],
+    "pain_severity_scale": ["extreme", "moderate", "light"],
+    "gain_relevance_scale": ["essential", "expected", "desired", "unexpected"]
+  },
+  "high_value_job_rubric": {
+    "important": "Failing the job leads to extreme pains or misses out on essential gains.",
+    "tangible": "Pains or gains related to the job are felt or experienced immediately or frequently.",
+    "unsatisfied": "Current value propositions do not solve the job or leave massive unresolved pains.",
+    "lucrative": "A large population has this job, or a small niche is willing to pay a heavy premium."
+  },
+  "value_map_categories": {
+    "products_and_services": [
+      "physical_tangible",
+      "intagible",
+      "digital",
+      "financial"
+    ],
+    "fit_check_rules": {
+      "pain_relievers_must": "Address extreme pains directly; do not create a generic list of features.",
+      "gain_creators_must": "Deliver on essential, expected, or unexpected customer gains explicitly.",
+      "orphan_features": "Any feature without a matching job, pain, or gain in the profile must be flagged as waste."
+    }
+  },
+  "osterwalder_7_bm_questions": {
+    "switching_costs": "How easy or difficult is it for customers to switch to another company? (Locked in [10] vs Free to leave [0])",
+    "recurring_revenues": "Is every sale a new effort or does it result in quasi-guaranteed follow-up revenue? (Automatically recurring [10] vs Transactional [0])",
+    "earning_versus_spending": "Do you earn revenues before you incur costs or vice versa? (Earn before spend [10] vs Spend before earn [0])",
+    "game_changing_cost_structure": "Is your cost structure substantially better than your competitors? (50%+ cheaper [10] vs standard industry costs [0])",
+    "others_do_the_work": "How much does your business model get customers or partners to create value for free? (User-generated value [10] vs heavy internal labor [0])",
+    "scalability": "How easily can you grow your business model without running into resource bottlenecks? (Infinite/digital scalability [10] vs linear brick-and-mortar [0])",
+    "protection_from_competition": "How strong are your business model moats compared to a standalone product? (Hard to copy/platform moats [10] vs easily copied [0])"
+  },
+  "experiment_library": {
+    "interest_validation": [
+      {
+        "name": "Google AdWords Tracking",
+        "reliability": "low_to_medium",
+        "cost": "low",
+        "metric": "Click-Through Rate (CTR)",
+        "cta": "Clicking an ad on a targeted keyword"
+      },
+      {
+        "name": "Landing Page MVP",
+        "reliability": "medium",
+        "cost": "low",
+        "metric": "Email subscription rate / Click-to-learn rate",
+        "cta": "Entering personal email for product updates"
+      }
+    ],
+    "preference_validation": [
+      {
+        "name": "Speed Boat / Sail Boat Game",
+        "reliability": "medium",
+        "cost": "low",
+        "metric": "Anchor and sail placement rankings",
+        "cta": "Customers visually mapping pains as anchors and gains as sails"
+      },
+      {
+        "name": "Product Box Customization",
+        "reliability": "medium",
+        "cost": "medium",
+        "metric": "Feature packaging frequency",
+        "cta": "Customers designing their dream product box and explaining feature prioritizations"
+      },
+      {
+        "name": "Wizard of Oz Test",
+        "reliability": "high",
+        "cost": "medium",
+        "metric": "Task completion and feature engagement",
+        "cta": "Interacting with a manual backstage setup styled as a fully automated software"
+      }
+    ],
+    "willingness_to_pay_validation": [
+      {
+        "name": "Presale / Crowdfunding campaign",
+        "reliability": "very_high",
+        "cost": "medium_to_high",
+        "metric": "Funding achievement % / Deposit rate",
+        "cta": "Submitting credit card for prepurchase or financial pledge"
+      },
+      {
+        "name": "Mock Sales",
+        "reliability": "very_high",
+        "cost": "medium",
+        "metric": "Checkout rate",
+        "cta": "Initiating checkout with real payment intent (e.g. buy button click)"
+      }
+    ]
+  },
+  "data_traps": {
+    "false_positive": {
+      "name": "False-Positive Trap (Pregnant Man Trap)",
+      "risk": "Seeing patterns that are not there (relying on polite spoken feedback or interview agreements).",
+      "defense": "Insist on experiments where customers must make real investments (providing emails, phone numbers, or credit cards) to prove real-world interest."
+    },
+    "false_negative": {
+      "name": "False-Negative Trap",
+      "risk": "Rejecting a great idea because of an inadequate test setup (e.g. Dropbox AdWords failing because customers did not search for a new market).",
+      "defense": "Ensure testing mechanism aligns with market maturity. Recommend alternative channels."
+    },
+    "local_maximum": {
+      "name": "Local Maximum Trap",
+      "risk": "Optimizing around a mediocre local peak instead of exploring global mountains.",
+      "defense": "Force the user to test at least three radically different business model directions in parallel before deep optimization."
+    },
+    "exhausted_maximum": {
+      "name": "Exhausted Maximum Trap",
+      "risk": "Overlooking market size limits by assuming a small early adapter group represents the entire population.",
+      "defense": "Insist on validation parameters that prove scalability beyond initial test subjects."
+    },
+    "wrong_data": {
+      "name": "Wrong Data Trap",
+      "risk": "Dropping a great opportunity because you are looking at the wrong segment data.",
+      "defense": "Re-run segment mapping using outliers as a bellwether for potential target adjustments."
+    }
+  },
+  "validation_funnel": [
+    "Interest Validated (CTR/Ads)",
+    "Preference Validated (Speed Boat/Storyboards)",
+    "Willingness to Pay Validated (Presales/Mock Purchases)"
+  ],
+  "phase_module_map": {
+    "Canvas": "profile",
+    "Design": "value-map",
+    "Evolve": "business-model",
+    "Test": "experiments"
+  }
+}

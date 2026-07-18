@@ -1,0 +1,308 @@
+{
+  "atoms": [
+    {
+      "id": "P01",
+      "module": "profile",
+      "asks": "Which specific customer segment are we profiling?",
+      "accepts_summary": "Names a segment with exclusion; labels scope decision; blocking unknown keeps P01 active.",
+      "unlocks": "P02",
+      "gate": false
+    },
+    {
+      "id": "P02",
+      "module": "profile",
+      "asks": "What event starts this segment's effort to make progress?",
+      "accepts_summary": "Describes observable situation and trigger, or labels unknown.",
+      "unlocks": "P03",
+      "gate": false
+    },
+    {
+      "id": "P03",
+      "module": "profile",
+      "asks": "What practical progress is this segment trying to make in that situation?",
+      "accepts_summary": "States progress as action and outcome with evidence kind labeled.",
+      "unlocks": "P04",
+      "gate": false
+    },
+    {
+      "id": "P04",
+      "module": "profile",
+      "asks": "How does this segment want relevant other people to see them while they pursue this job?",
+      "accepts_summary": "Names audience and desired impression, or records unknown.",
+      "unlocks": "P05",
+      "gate": false
+    },
+    {
+      "id": "P05",
+      "module": "profile",
+      "asks": "What does this segment want to feel, or avoid feeling, while making this progress?",
+      "accepts_summary": "Names desired or avoided feeling grounded in situation, or unknown.",
+      "unlocks": "P06",
+      "gate": false
+    },
+    {
+      "id": "P06",
+      "module": "profile",
+      "asks": "Which buying, co-creating, or transferring tasks accompany this segment's main job?",
+      "accepts_summary": "Names supporting tasks by category, or none/unknown.",
+      "unlocks": "P07",
+      "gate": false
+    },
+    {
+      "id": "P07",
+      "module": "profile",
+      "asks": "Which pains most obstruct the accepted jobs?",
+      "accepts_summary": "Names pains ordered by extreme, moderate, or light severity.",
+      "unlocks": "P08",
+      "gate": false
+    },
+    {
+      "id": "P08",
+      "module": "profile",
+      "asks": "Which outcomes count as gains for this segment?",
+      "accepts_summary": "Names gains classified essential, expected, desired, or unexpected.",
+      "unlocks": "P09",
+      "gate": false
+    },
+    {
+      "id": "P09",
+      "module": "profile",
+      "asks": "What does this segment do today instead, including workarounds or choosing not to act?",
+      "accepts_summary": "Names current behavior or explicitly unknown.",
+      "unlocks": "P10",
+      "gate": false
+    },
+    {
+      "id": "P10",
+      "module": "profile",
+      "asks": "What observed action best supports this profile?",
+      "accepts_summary": "Provides claim, kind, source, strength; behavior outranks spoken approval.",
+      "unlocks": "P11",
+      "gate": false
+    },
+    {
+      "id": "P11",
+      "module": "profile",
+      "asks": "Which accepted job should be the priority?",
+      "accepts_summary": "Selects one job with reason tied to importance, immediacy, dissatisfaction, or economics.",
+      "unlocks": "P12",
+      "gate": false
+    },
+    {
+      "id": "P12",
+      "module": "profile",
+      "asks": "Does this customer profile pass its gate now?",
+      "accepts_summary": "Explicit pass or reopen decision with reason and target atom.",
+      "unlocks": "V01",
+      "gate": true
+    },
+    {
+      "id": "V01",
+      "module": "value-map",
+      "asks": "Which single offering are we mapping?",
+      "accepts_summary": "Names one offering with boundary exclusion; blocking unknown keeps V01 active.",
+      "unlocks": "V02",
+      "gate": false
+    },
+    {
+      "id": "V02",
+      "module": "value-map",
+      "asks": "What products or services are actually included in this offering?",
+      "accepts_summary": "Lists concrete included items; avoids claiming benefits as deliverables.",
+      "unlocks": "V03",
+      "gate": false
+    },
+    {
+      "id": "V03",
+      "module": "value-map",
+      "asks": "How does each relevant part of the offering reduce a specific accepted customer pain?",
+      "accepts_summary": "Links relief to included item and accepted pain; labels unsupported effects hypothesis.",
+      "unlocks": "V04",
+      "gate": false
+    },
+    {
+      "id": "V04",
+      "module": "value-map",
+      "asks": "How does each relevant part of the offering create a specific accepted customer gain?",
+      "accepts_summary": "Links effect to included item and accepted gain; labels unsupported effects hypothesis.",
+      "unlocks": "V05",
+      "gate": false
+    },
+    {
+      "id": "V05",
+      "module": "value-map",
+      "asks": "Which accepted job, pain, or gain does each offering item, pain reliever, and gain creator serve?",
+      "accepts_summary": "Traceable match for every item or marks unmatched; no invented profile claims.",
+      "unlocks": "V06",
+      "gate": false
+    },
+    {
+      "id": "V06",
+      "module": "value-map",
+      "asks": "Which unmatched items are orphan candidates?",
+      "accepts_summary": "Names unmatched items with deferred disposition, or empty when all matched.",
+      "unlocks": "V07",
+      "gate": false
+    },
+    {
+      "id": "V07",
+      "module": "value-map",
+      "asks": "What meaningful difference does this offering provide over the accepted current alternatives for the priority job?",
+      "accepts_summary": "Specific difference tied to accepted job, pain, or gain with evidence label.",
+      "unlocks": "V08",
+      "gate": false
+    },
+    {
+      "id": "V08",
+      "module": "value-map",
+      "asks": "Does this value map pass its gate now?",
+      "accepts_summary": "Explicit pass or reopen decision with reason and target atom.",
+      "unlocks": "B01",
+      "gate": true
+    },
+    {
+      "id": "B01",
+      "module": "business-model",
+      "asks": "Through which concrete channel path will the accepted segment discover, buy, receive, and use this offering?",
+      "accepts_summary": "Describes channel stages; labels untested stages hypothesis or unknown.",
+      "unlocks": "B02",
+      "gate": false
+    },
+    {
+      "id": "B02",
+      "module": "business-model",
+      "asks": "What relationship must the business maintain with this segment across the accepted channel path?",
+      "accepts_summary": "Names required interactions and performers; marks unestablished unknown.",
+      "unlocks": "B03",
+      "gate": false
+    },
+    {
+      "id": "B03",
+      "module": "business-model",
+      "asks": "What payment behavior will fund this offering?",
+      "accepts_summary": "States payer, exchange, recurrence, cash timing with evidence labels.",
+      "unlocks": "B04",
+      "gate": false
+    },
+    {
+      "id": "B04",
+      "module": "business-model",
+      "asks": "Which activities and resources are indispensable to deliver the accepted value map through this model?",
+      "accepts_summary": "Names indispensable work and assets with ownership labeled.",
+      "unlocks": "B05",
+      "gate": false
+    },
+    {
+      "id": "B05",
+      "module": "business-model",
+      "asks": "What external support and spending does this model require?",
+      "accepts_summary": "Names partners, dependencies, principal costs with evidence.",
+      "unlocks": "B06",
+      "gate": false
+    },
+    {
+      "id": "B06",
+      "module": "business-model",
+      "asks": "What becomes the first binding constraint as demand grows?",
+      "accepts_summary": "Constraint with growth behavior and basis, or blocking unknown keeps B06 active.",
+      "unlocks": "B07",
+      "gate": false
+    },
+    {
+      "id": "B07",
+      "module": "business-model",
+      "asks": "What evidenced switching behavior or hard-to-copy model advantage could protect this business?",
+      "accepts_summary": "Concrete switching factor or defensibility mechanism with evidence, or none established.",
+      "unlocks": "B08",
+      "gate": false
+    },
+    {
+      "id": "B08",
+      "module": "business-model",
+      "asks": "Does this business model pass its gate now?",
+      "accepts_summary": "Explicit pass or reopen decision; pass requires content or explicit unknown in every area.",
+      "unlocks": "E01",
+      "gate": true
+    },
+    {
+      "id": "E01",
+      "module": "experiments",
+      "asks": "Which assumptions must be true for this design to succeed?",
+      "accepts_summary": "At least one falsifiable assumption per applicable category.",
+      "unlocks": "E02",
+      "gate": false
+    },
+    {
+      "id": "E02",
+      "module": "experiments",
+      "asks": "How should the inventoried assumptions be ranked for testing?",
+      "accepts_summary": "Assigns criticality and evidence status to each assumption.",
+      "unlocks": "E03",
+      "gate": false
+    },
+    {
+      "id": "E03",
+      "module": "experiments",
+      "asks": "Which assumption should be tested next?",
+      "accepts_summary": "Selects one assumption with consequence of failure and evidence gap.",
+      "unlocks": "E04",
+      "gate": false
+    },
+    {
+      "id": "E04",
+      "module": "experiments",
+      "asks": "What smallest ethical experiment could expose the selected hypothesis to observable customer behavior?",
+      "accepts_summary": "Names participants, setup, action, observation tied to hypothesis.",
+      "unlocks": "E05",
+      "gate": false
+    },
+    {
+      "id": "E05",
+      "module": "experiments",
+      "asks": "What result would count as support for this hypothesis?",
+      "accepts_summary": "Defines metric, threshold, time window, and result classification.",
+      "unlocks": "E06",
+      "gate": false
+    },
+    {
+      "id": "E06",
+      "module": "experiments",
+      "asks": "How strong is the evidence this experiment is designed to produce?",
+      "accepts_summary": "Names required behavior, alternative explanation, and credible alternative direction.",
+      "unlocks": "E07",
+      "gate": false
+    },
+    {
+      "id": "E07",
+      "module": "experiments",
+      "asks": "Do you accept the assembled test card as written?",
+      "accepts_summary": "Confirms or corrects test card; acceptance is explicit decision.",
+      "unlocks": "E08",
+      "gate": false
+    },
+    {
+      "id": "E08",
+      "module": "experiments",
+      "asks": "What observable result did the test produce?",
+      "accepts_summary": "Prior hypothesis, raw observation, source, strength; absent result is blocking unknown.",
+      "unlocks": "E09",
+      "gate": false
+    },
+    {
+      "id": "E09",
+      "module": "experiments",
+      "asks": "What should change next because of this result?",
+      "accepts_summary": "One concrete next action citing result and threshold.",
+      "unlocks": "E10",
+      "gate": false
+    },
+    {
+      "id": "E10",
+      "module": "experiments",
+      "asks": "Does this experiment cycle pass its gate now?",
+      "accepts_summary": "Explicit pass or reopen; pass requires hypothesis, test card, result, learning, next decision.",
+      "unlocks": null,
+      "gate": true
+    }
+  ]
+}

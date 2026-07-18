@@ -17,3 +17,7 @@ Fill only from accepted facts, labeled inferences, explicit decisions, and unres
 ## Hypotheses and excluded/parked scope
 
 ## Acceptance signals
+
+## Moat and unknown scores
+
+## Excluded scope

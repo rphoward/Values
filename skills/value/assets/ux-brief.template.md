@@ -12,6 +12,8 @@ Fill only from accepted facts, labeled inferences, explicit decisions, and unres
 
 ## Information and trust needs
 
+## Journey from channels and relationships
+
 ## Required states
 
 ### Empty
@@ -29,3 +31,5 @@ Fill only from accepted facts, labeled inferences, explicit decisions, and unres
 ## Evidence, assumptions, unknowns
 
 ## Research and experiment hooks
+
+## Evidence strength summary

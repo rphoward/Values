@@ -5,10 +5,13 @@
     (session-root "workproduct/value-proposition/<project-slug>/")
     (canonical-file "session.json")
     (schema assets/session.schema.json)
+    (atoms-index assets/atoms.json)
+    (knowledge-base assets/knowledge-base.json)
     (required-top-level
       schema_version
       project
       position
+      ledger
       answers
       evidence
       assumptions
@@ -36,6 +39,7 @@
         (created_at "current RFC 3339 timestamp")
         (updated_at "same timestamp as created_at"))
       (initial-position profile P01 in_progress)
+      (initial-ledger "scripts/init_session.py computes phase Canvas, active_module profile, completion_pct 0, validation_milestone None, unvalidated_bombs empty")
       (initial-arrays answers evidence assumptions decisions unknowns artifacts :empty t)
       (initial-timestamps created_at updated_at :rfc3339 t :same-value t))
     (write "complete schema-valid session.json immediately after consent")
@@ -52,14 +56,33 @@
     (decision "explicit choice with reason recorded")
     (unknown "required information not yet established — never convert to inference"))
 
+  (section ledger
+    (shape
+      (phase "Canvas | Design | Evolve | Test | Complete — mapped from active module via phase_module_map in knowledge-base")
+      (active_module "profile | value-map | business-model | experiments | none")
+      (completion_pct "integer 0–100: count of atoms with a current accepted answer divided by total atoms in atoms.json; bypassed modules count all their atoms complete")
+      (validation_milestone "None | Problem-Solution Fit | Product-Market Fit | Business Model Fit | Validation Complete")
+      (unvalidated_bombs "list of high-criticality assumptions with unsupported or unknown evidence_status"))
+    (recompute "scripts/_session.py recomputes ledger on init, accept, status --refresh, milestone, and brief writes")
+    (surface "agent opens every turn with scripts/status.py one-line ledger output"))
+
   (section answer-record
     (shape
       (atom_id "stable atom identifier from active module reference")
       (answer "accepted text for this atom")
       (kind "one of fact inference hypothesis decision unknown")
       (accepted_at "RFC 3339 timestamp"))
+    (sidecar "accept_answer.py --records path.json may append evidence assumptions decisions unknowns artifacts in one write")
+    (sidecar-shape
+      (evidence "array of claim kind source strength")
+      (assumptions "array of claim criticality evidence_status source_atom")
+      (decisions "array of decision reason source_atom resulting_module resulting_atom resulting_status")
+      (unknowns "array of question blocking")
+      (artifacts "array of path status upserts"))
     (project-write "set project.updated_at to accepted_at on every accepted answer")
-    (append-only "new acceptance appends; reopening a decision adds a superseding record and notes conflict resolution"))
+    (append-only "new acceptance appends; reopening a decision adds a superseding record and notes conflict resolution")
+    (reopen "only via accept_answer.py --reopen --conflict-note or explicit user reopen request; refuse duplicate accept without reopen")
+    (current-answer "latest answers[] record for an atom_id is the current accepted answer"))
 
   (section position-shape
     (position-only "position is only the current active atom; it is not module history")
@@ -106,7 +129,8 @@
       business-model.md
       experiment-plan.md
       product-design-brief.md
-      ux-brief.md))
+      ux-brief.md
+      app-design-brief.md))
 
   (section conflict-handling
     (on-conflict "append a blocking unknown with the conflicting statements; preserve both accepted answers")
@@ -119,12 +143,22 @@
     (ask "current atom only")
     (forbidden 'repeat-completed-atoms 'invent-missing-state))
 
+  (section script-orchestration
+    (init scripts/init_session.py — creates session after explicit user consent; agent must not call without consent)
+    (status scripts/status.py — one-line ledger; run on activation and open every turn)
+    (next scripts/next_question.py — emit next unsatisfied atom; agent asks only this question)
+    (accept scripts/accept_answer.py — append answer, optional --records sidecar for evidence assumptions decisions unknowns artifacts; refuse duplicate without --reopen)
+    (milestone scripts/write_milestone.py — fill module template at gate_pending)
+    (briefs scripts/write_design_briefs.py — always writes product-design-brief.md, ux-brief.md, app-design-brief.md)
+    (forbidden 'agent-hand-writes-session-json 're-ask-answered-atom-without-reopen))
+
   (section milestone-writes
     (trigger "module gate_pending after final atom accepted")
     (source "accepted answers and labeled evidence for that module only")
     (brief-prerequisite "derive all four module outcomes from decisions and artifact statuses; each must be completed or bypassed")
     (product-brief "only from accepted facts, labeled inferences, decisions, unresolved assumptions")
     (ux-brief "only from accepted facts, labeled inferences, decisions, unresolved assumptions")
+    (app-brief "only from accepted facts, labeled inferences, decisions, unresolved assumptions")
     (forbidden 'score-without-evidence 'full-canvas-before-atoms))
 
   (section phase-bypass-record

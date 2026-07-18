@@ -22,26 +22,45 @@ metadata:
       (session-contract references/session-contract.md))
     (assets
       (session-schema assets/session.schema.json)
+      (atoms-index assets/atoms.json)
+      (knowledge-base assets/knowledge-base.json)
       (customer-profile-template assets/customer-profile.template.md)
       (value-map-template assets/value-map.template.md)
       (business-model-template assets/business-model.template.md)
       (experiment-plan-template assets/experiment-plan.template.md)
       (product-design-brief-template assets/product-design-brief.template.md)
-      (ux-brief-template assets/ux-brief.template.md)))
+      (ux-brief-template assets/ux-brief.template.md)
+      (app-design-brief-template assets/app-design-brief.template.md)
+      (test-card-template assets/test-card.template.md)
+      (learning-card-template assets/learning-card.template.md))
+    (scripts
+      (init scripts/init_session.py)
+      (status scripts/status.py)
+      (next scripts/next_question.py)
+      (accept scripts/accept_answer.py)
+      (milestone scripts/write_milestone.py)
+      (briefs scripts/write_design_briefs.py)))
 
   <central_idea>
   (center-of-gravity
-    (invariant "Teach value proposition design one atom at a time. Canonical state lives in workproduct/value-proposition/<project-slug>/session.json. The orchestrator paces turns; module references supply atoms; milestone artifacts come from labeled state only."))
+    (invariant "Teach value proposition design one atom at a time. Canonical state lives in workproduct/value-proposition/<project-slug>/session.json. Scripts own session writes and ledger recompute; the orchestrator surfaces ledger each turn, asks only the next atom, and loads knowledge-base when applying scales, scores, experiments, or traps."))
   </central_idea>
+
+  (protocol-0-philosophy
+    (forbid-spreadsheet-mirage "Load assets/knowledge-base.json visual_grounding_analogies.spreadsheet_mirage; block premature financial modeling before validation gates")
+    (avoid-cognitive-murder "Present sticky-note pacing; one primary question per turn; progressive disclosure only")
+    (end-nudge "Close each turn with one contextual next-step design decision, not a generic prompt")
+    (phase-map "Suite Canvas=profile, Design=value-map, Evolve=business-model, Test=experiments — module order unchanged"))
 
   (protocol-1-activation
     (on-activation
-      1 "read references/session-contract.md for field shapes, evidence kinds, creation, and failure handling"
-      2 "validate session.json against assets/session.schema.json when present"
-      3 "when absent, follow the missing-session creation sequence and ask only its one project-identity question")
+      1 "read references/session-contract.md for field shapes, evidence kinds, creation, ledger, and script orchestration"
+      2 "when session.json exists run scripts/status.py and open the turn with its one-line ledger"
+      3 "when absent follow missing-session creation; ask only project identity; obtain consent before scripts/init_session.py")
     (session-root "workproduct/value-proposition/<project-slug>/")
     (canonical-state "session.json")
-    (forbidden 'invent-prior-answers 'advance-without-accepted-answer 'full-canvas-before-atoms))
+    (kb-load "read assets/knowledge-base.json when applying scales, high-value rubric, BM 0–10 anchors, experiment library, data traps, or validation funnel")
+    (forbidden 'invent-prior-answers 'advance-without-accepted-answer 'full-canvas-before-atoms 'hand-edit-session-json))
 
   (protocol-2-phase-order
     (sequence profile value-map business-model experiments)
@@ -62,36 +81,33 @@ metadata:
 
   (protocol-3-turn-recipe
     (shape
-      1 "orientation — name current module and why this atom follows the last accepted answer"
-      2 "micro-lesson or compact original visual analogy when useful — never reproduce book figures"
-      3 "one primary question from the active atom"
-      4 "wait for the user's answer")
+      1 "ledger line from scripts/status.py"
+      2 "orientation — name current module and why this atom follows the last accepted answer"
+      3 "micro-lesson or compact original visual analogy when useful — never reproduce book figures"
+      4 "one primary question from scripts/next_question.py only"
+      5 "wait for the user's answer")
   (batching "up to three tightly related questions only when the user explicitly requests batching")
   (follow-up "when answer is vague, inferred, or missing evidence: one focused follow-up; do not advance")
-  (acceptance "advance only when the active atom's (accepts ...) criteria are met")
-  (blocking-unknown "retain the active atom when its reference marks an unresolved boundary or missing result blocking")
-  (forbidden 'emit-full-canvas-matrix-or-scorecard-before-required-answers))
+  (acceptance "advance only when the active atom's (accepts ...) criteria are met; then scripts/accept_answer.py")
+  (blocking-unknown "retain the active atom when its reference marks an unresolved boundary or missing result blocking; pass --stay to accept_answer.py")
+  (reopen "when user reopens an atom use accept_answer.py --reopen --conflict-note; do not re-ask answered atoms otherwise")
+  (forbidden 'emit-full-canvas-matrix-or-scorecard-before-required-answers 're-ask-without-reopen))
 
   (protocol-4-answer-and-state
     (evidence-kinds fact inference hypothesis decision unknown)
     (on-accept
-      1 "append answer record with atom_id, answer text, kind, accepted_at"
-      2 "update position to the atom's (unlocks ...) target"
-      3 "refresh project.updated_at and write session.json immediately")
+      1 "run scripts/accept_answer.py with atom_id, answer, kind, and optional --records JSON sidecar"
+      2 "sidecar may append evidence, assumptions, decisions, unknowns, artifacts; decisions may set resulting position on bypass or reopen"
+      3 "scripts append answer, advance position, recompute ledger")
     (refresh "project.updated_at to the accepted_at RFC 3339 timestamp")
     (module-gate
-      (when "module final atom accepted")
-      (outcome "derive completed from the gate decision plus final milestone artifact; position remains only the current active atom")
-      (write-artifact-from-template
-        (profile assets/customer-profile.template.md → customer-profile.md)
-        (value-map assets/value-map.template.md → value-map.md)
-        (business-model assets/business-model.template.md → business-model.md)
-        (experiments assets/experiment-plan.template.md → experiment-plan.md)))
+      (when "gate atom accepted with pass and --gate-pending")
+      (run "scripts/write_milestone.py --module <module>")
+      (outcome "derive completed from gate decision plus final milestone artifact"))
     (completion-briefs
       (gate-prerequisite "profile, value-map, business-model, and experiments must each be completed or explicitly bypassed")
+      (run "scripts/write_design_briefs.py — always writes product-design-brief.md, ux-brief.md, app-design-brief.md")
       (inputs-only "accepted facts, labeled inferences, explicit decisions, unresolved assumptions")
-      (product-design-brief assets/product-design-brief.template.md)
-      (ux-brief assets/ux-brief.template.md)
       (forbidden 'invent-precision 'convert-unknown-to-inference)))
 
   (protocol-5-parking-and-bypass
@@ -106,18 +122,19 @@ metadata:
 
   (protocol-6-resume-and-failure
     (resume
-      1 "read session.json"
+      1 "run scripts/status.py"
       2 "report last accepted decision in one sentence"
-      3 "ask the current atom — do not repeat completed questions unless user reopens a decision")
+      3 "run scripts/next_question.py and ask only that atom")
     (missing-session
-      "ask project identity only, wait for consent, then write the complete initial document from references/session-contract.md"
+      "ask project identity only, wait for consent, then scripts/init_session.py"
       (defer "phase-jump, bypass, and satisfy-prerequisite offers until after session.json exists"))
     (invalid-session "stop; identify invalid field; preserve file unchanged")
-    (conflicting-answer "record conflict; ask which statement governs")
+    (conflicting-answer "record conflict; ask which statement governs; reopen via accept_answer --reopen")
     (unknown-evidence "mark unknown; do not convert to inference"))
 
   (protocol-7-authoring
     (follow 'skill-authoring.mdc)
-    (follow 'skills-repo.mdc)
+    (scripts-exception "package-local scripts/_session.py is stdlib-only; skill ship surface exception to skills-repo eliotapp import rule")
     (contract references/session-contract.md)
-    (schema assets/session.schema.json)))
+    (schema assets/session.schema.json)
+    (atoms assets/atoms.json)))

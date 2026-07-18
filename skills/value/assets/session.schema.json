@@ -8,6 +8,7 @@
     "schema_version",
     "project",
     "position",
+    "ledger",
     "answers",
     "evidence",
     "assumptions",
@@ -25,6 +26,9 @@
     },
     "position": {
       "$ref": "#/$defs/position"
+    },
+    "ledger": {
+      "$ref": "#/$defs/ledger"
     },
     "answers": {
       "type": "array",
@@ -87,6 +91,49 @@
           "type": "string",
           "format": "date-time",
           "pattern": "^(?:(?:[0-9]{4}-(?:(?:01|03|05|07|08|10|12)-(?:0[1-9]|[12][0-9]|3[01])|(?:04|06|09|11)-(?:0[1-9]|[12][0-9]|30)|02-(?:0[1-9]|1[0-9]|2[0-8])))|(?:(?:[0-9]{2}(?:0[48]|[2468][048]|[13579][26])|(?:0[48]|[2468][048]|[13579][26])00)-02-29))T(?:[01][0-9]|2[0-3]):[0-5][0-9]:(?:[0-5][0-9]|60)(?:\\.[0-9]+)?(?:Z|[+-](?:[01][0-9]|2[0-3]):[0-5][0-9])$"
+        }
+      }
+    },
+    "ledger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "active_module",
+        "completion_pct",
+        "validation_milestone",
+        "unvalidated_bombs"
+      ],
+      "properties": {
+        "phase": {
+          "type": "string",
+          "enum": ["Canvas", "Design", "Evolve", "Test", "Complete"]
+        },
+        "active_module": {
+          "type": "string",
+          "enum": ["profile", "value-map", "business-model", "experiments", "none"]
+        },
+        "completion_pct": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "validation_milestone": {
+          "type": "string",
+          "enum": [
+            "None",
+            "Problem-Solution Fit",
+            "Product-Market Fit",
+            "Business Model Fit",
+            "Validation Complete"
+          ]
+        },
+        "unvalidated_bombs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     },
@@ -169,6 +216,13 @@
           "type": "string",
           "format": "date-time",
           "pattern": "^(?:(?:[0-9]{4}-(?:(?:01|03|05|07|08|10|12)-(?:0[1-9]|[12][0-9]|3[01])|(?:04|06|09|11)-(?:0[1-9]|[12][0-9]|30)|02-(?:0[1-9]|1[0-9]|2[0-8])))|(?:(?:[0-9]{2}(?:0[48]|[2468][048]|[13579][26])|(?:0[48]|[2468][048]|[13579][26])00)-02-29))T(?:[01][0-9]|2[0-3]):[0-5][0-9]:(?:[0-5][0-9]|60)(?:\\.[0-9]+)?(?:Z|[+-](?:[01][0-9]|2[0-3]):[0-5][0-9])$"
+        },
+        "reopen": {
+          "type": "boolean"
+        },
+        "conflict_note": {
+          "type": "string",
+          "minLength": 1
         }
       }
     },
