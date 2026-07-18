@@ -15,8 +15,6 @@ from _session import (
     load_session,
     module_outcome,
     pacing_mode,
-    ready_atoms,
-    recompute_ledger,
     schedule_next_atom,
 )
 
@@ -71,10 +69,8 @@ def main() -> int:
         session, GATE_ATOMS[atom["id"]]
     ) == "pending"
     position = session["position"]
-    ready = ready_atoms(session, atoms)
     payload = {
         "atom_id": atom["id"],
-        "focus_atom": atom["id"],
         "module": atom["module"],
         "section": atom.get("section"),
         "asks": atom["asks"],
@@ -82,11 +78,8 @@ def main() -> int:
         "soft": atom.get("soft", False),
         "gate": atom.get("gate", False),
         "gate_due": gate_due,
-        "ready_count": len(ready),
         "pacing_mode": pacing_mode(session),
-        "position_atom_id": position["atom_id"],
         "position_status": position["status"],
-        "ledger": recompute_ledger(session),
     }
     print(json.dumps(payload, indent=2))
     return 0

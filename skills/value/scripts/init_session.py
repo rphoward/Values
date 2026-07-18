@@ -4,20 +4,21 @@
 from __future__ import annotations
 
 import argparse
-import re
 import sys
 from pathlib import Path
 
-from _session import default_session, save_session
+from _session import SLUG_RE, default_session, derive_slug_from_name, save_session
 
-SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 PACING_CHOICES = ("standard", "express")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Initialize a value proposition session.")
-    parser.add_argument("--slug", required=True, help="Path-safe project slug")
     parser.add_argument("--name", required=True, help="Display name")
+    parser.add_argument(
+        "--slug",
+        help="Path-safe project slug (derived from --name when omitted)",
+    )
     parser.add_argument(
         "--root",
         default="workproduct/value-proposition",
@@ -31,17 +32,24 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    if not SLUG_RE.fullmatch(args.slug):
-        print(f"Invalid slug: {args.slug!r}", file=sys.stderr)
+    slug = args.slug
+    if slug is None:
+        try:
+            slug = derive_slug_from_name(args.name)
+        except ValueError as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
+    elif not SLUG_RE.fullmatch(slug):
+        print(f"Invalid slug: {slug!r}", file=sys.stderr)
         return 1
 
-    session_dir = Path(args.root) / args.slug
+    session_dir = Path(args.root) / slug
     session_path = session_dir / "session.json"
     if session_path.exists():
         print(f"Session already exists: {session_path}", file=sys.stderr)
         return 1
 
-    session = default_session(args.slug, args.name, pacing_mode=args.pacing_mode)
+    session = default_session(slug, args.name, pacing_mode=args.pacing_mode)
     save_session(session_path, session)
     print(f"Created {session_path}")
     return 0

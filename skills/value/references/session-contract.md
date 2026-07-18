@@ -30,10 +30,12 @@
     (record-atoms "answer atom_id and decision or assumption source_atom must be known atom identifiers"))
 
   (section missing-session-creation
-    (ask-first "project slug and display name only")
-    (wait "for the user's project identity answer")
-    (ask-consent "one primary question: create workproduct/value-proposition/<project-slug>/session.json?")
+    (ask-first "what the user is working on — display name only; derive slug silently from name")
+    (wait "for the user's project name answer")
+    (derive-slug "lowercase, hyphenate, strip unsafe chars per slug-format; never ask the user for slug")
+    (ask-consent "one primary question: create workproduct/value-proposition/<derived-slug>/session.json?")
     (wait-for "explicit consent before creating session.json")
+    (init-command "scripts/init_session.py --name <display-name> [--slug <slug>] [--pacing-mode express|standard]")
     (initial-document
       (schema_version "1.1")
       (project
@@ -67,7 +69,8 @@
       (validation_milestone "None | Problem-Solution Fit | Product-Market Fit | Business Model Fit | Validation Complete")
       (unvalidated_bombs "list of high-criticality assumptions with unsupported or unknown evidence_status"))
     (recompute "scripts/_session.py recomputes ledger on init, accept, status --refresh, milestone, and brief writes")
-    (surface "agent opens every turn with scripts/status.py one-line ledger output"))
+    (surface-brief "scripts/status.py defaults to human one-liner (--brief); agent-internal only — never quote to user")
+    (surface-operator "scripts/status.py --operator prints full ledger for tests and debugging"))
 
   (section answer-record
     (shape
@@ -150,6 +153,7 @@
     (atoms-index "assets/atoms.json fields requires section soft per atom; unlocks retained for gate bridges only")
     (ready-set "all atoms whose requires subset is answered and module not bypassed; first atom of each module also requires prior module completed or bypassed")
     (focus-atom "scripts/next_question.py pick among ready set: gate_pending milestone first, then section with fewest satisfied atoms, then lowest atom id")
+    (next-json "scripts/next_question.py stdout is agent-internal JSON; orchestrator rephrases asks — never echo JSON or accepts_summary to user unless user asks what counts as an answer")
     (off-position-accept "accept_answer.py allows any ready atom; refuses when atom not in ready set")
     (soft-accept "soft true atoms accept kind unknown for taxonomy labels; orchestrator does not loop on nuance unless user asks to teach")
     (draft-map "agent JSON with mappings array; map_gaps.py dry-run; accept_bulk.py validates and writes")
@@ -157,9 +161,9 @@
     (express "pacing_mode express limits schedulable atoms to module spine; completion_pct counts spine only; set via init_session --pacing-mode or set_pacing_mode.py"))
 
   (section script-orchestration
-    (init scripts/init_session.py — creates session after explicit user consent; agent must not call without consent)
-    (status scripts/status.py — one-line ledger; --sections prints section strip; run on activation and open every turn)
-    (next scripts/next_question.py — emit scheduler focus atom with section and ready_count; --gaps for gap lists)
+    (init scripts/init_session.py — creates session after explicit user consent; --name required, --slug optional derived from name; agent must not call without consent)
+    (status scripts/status.py — default human brief line; --operator full ledger; --sections section strip on resume or when user asks progress)
+    (next scripts/next_question.py — emit scheduler focus atom with section; JSON agent-internal; --gaps for gap lists)
     (accept scripts/accept_answer.py — append answer on any ready atom; optional --records sidecar; refuse duplicate without --reopen)
     (gaps scripts/gaps.py — hard and soft gaps by section)
     (bulk scripts/accept_bulk.py — validate draft-map JSON and append multiple answers)

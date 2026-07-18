@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 from _session import (
+    format_brief_status,
     format_section_strip,
     format_status_line,
     load_atoms,
@@ -30,6 +31,11 @@ def main() -> int:
         action="store_true",
         help="Print section strip for the active module",
     )
+    parser.add_argument(
+        "--operator",
+        action="store_true",
+        help="Full ledger telemetry for tests and debugging (default is --brief)",
+    )
     args = parser.parse_args()
 
     if not args.session.is_file():
@@ -40,10 +46,13 @@ def main() -> int:
     session["ledger"] = recompute_ledger(session)
     if args.refresh:
         save_session(args.session, session)
+    atoms = load_atoms()
     if args.sections:
-        print(format_section_strip(session, load_atoms()))
-    else:
+        print(format_section_strip(session, atoms))
+    elif args.operator:
         print(format_status_line(session))
+    else:
+        print(format_brief_status(session, atoms))
     return 0
 
 

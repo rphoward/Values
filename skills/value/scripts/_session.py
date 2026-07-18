@@ -57,6 +57,18 @@ EXPRESS_REQUIRES: dict[str, tuple[str, ...]] = {
     "E10": ("E01", "E03"),
 }
 PACING_MODES = ("standard", "express")
+SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+MODULE_BRIEF_LABEL = {
+    "profile": "Customer profile",
+    "value-map": "Value map",
+    "business-model": "Business model",
+    "experiments": "Experiments",
+}
+SECTION_STATE_BRIEF = {
+    "partial": "in progress",
+    "satisfied": "locked",
+    "unknown_ok": "locked",
+}
 
 _atom_indexes_built = False
 GATE_ATOMS: dict[str, str] = {}
@@ -387,6 +399,51 @@ def recompute_ledger(session: dict[str, Any]) -> dict[str, Any]:
         "validation_milestone": validation_milestone(session),
         "unvalidated_bombs": unvalidated_bombs(session),
     }
+
+
+def derive_slug_from_name(name: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+    slug = re.sub(r"-+", "-", slug)
+    if not slug or not SLUG_RE.fullmatch(slug):
+        raise ValueError(f"Cannot derive path-safe slug from name: {name!r}")
+    return slug
+
+
+def format_brief_status(session: dict[str, Any], atoms: list[dict[str, Any]]) -> str:
+    position = session["position"]
+    module = position["module"]
+    if position.get("status") == "completed" or (
+        module == "experiments"
+        and module_outcome(session, "experiments") in {"completed", "bypassed"}
+    ):
+        return "Complete"
+
+    module_label = MODULE_BRIEF_LABEL.get(module, module.replace("-", " ").title())
+    statuses = section_status(session, atoms, module)
+    focus = schedule_next_atom(session, atoms)
+    if position.get("status") == "gate_pending":
+        focus_section = "gate review"
+    elif focus is not None:
+        focus_section = focus.get("section") or ""
+    else:
+        focus_section = ""
+
+    section_bits: list[str] = []
+    for section_name, state in statuses.items():
+        suffix = SECTION_STATE_BRIEF.get(state)
+        if suffix:
+            section_bits.append(f"{section_name} {suffix}")
+
+    parts = [module_label]
+    in_progress = [bit for bit in section_bits if bit.endswith("in progress")]
+    if in_progress:
+        parts.append(in_progress[0])
+    if focus_section:
+        if focus_section == "gate review":
+            parts.append("question: gate review")
+        else:
+            parts.append(f"question: {focus_section.lower()}")
+    return " · ".join(parts)
 
 
 def format_status_line(session: dict[str, Any]) -> str:

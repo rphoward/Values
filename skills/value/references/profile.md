@@ -15,6 +15,7 @@
   (atom
     (id P01)
     (name "segment boundary")
+    (voice-hint "Who you design for narrows every later tradeoff — get curious about who is in and who is out.")
     (teaches "A useful profile describes one recognizable customer segment, not everybody who might benefit. Choosing that scope is a decision; a user-supported observation keeps its original evidence kind rather than being upgraded to fact.")
     (asks "Which specific customer segment are we profiling?")
     (accepts "Names a segment using observable role or context and states at least one exclusion; labels an explicit scope choice decision and preserves another user-supported kind, while an unresolved boundary creates a blocking unknown and keeps P01 active.")
@@ -33,6 +34,7 @@
   (atom
     (id P03)
     (name "functional job")
+    (voice-hint "Progress in their real situation — not your feature list — is the hook for everything that follows.")
     (teaches "A functional job is the practical progress the customer is trying to make, independent of a proposed product. It follows the trigger so the job can be stated in the customer's actual context; probing why stops before the explanation becomes speculative.")
     (asks "What practical progress is this segment trying to make in that situation?")
     (accepts "States the progress as an action and outcome, with its evidence kind labeled; does not substitute a product feature or unsupported deeper motive.")
@@ -81,6 +83,7 @@
   (atom
     (id P08)
     (name "gains")
+    (voice-hint "Pains tell you what to fix; gains reveal what they are reaching toward — often the sharper design clue.")
     (teaches "Gains are outcomes customers require, expect, desire, or would value unexpectedly. They follow pains so positive outcomes are not merely restated fixes for every obstacle.")
     (kb gain-relevance-scale customer_profile_triggers.gain_relevance_scale)
     (asks "Which outcomes count as gains for this segment?")

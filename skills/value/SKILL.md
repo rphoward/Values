@@ -47,7 +47,7 @@ metadata:
 
   <central_idea>
   (center-of-gravity
-    (invariant "Teach value proposition design with DAG-paced atoms grouped by canvas section. Canonical state lives in workproduct/value-proposition/<project-slug>/session.json. Scripts own session writes, scheduler focus, and ledger recompute; the orchestrator surfaces ledger and section strip each turn, asks the scheduler focus atom, and loads knowledge-base when applying scales, scores, experiments, or traps."))
+    (invariant "Teach value proposition design with DAG-paced atoms grouped by canvas section. Canonical state lives in workproduct/value-proposition/<project-slug>/session.json. Scripts run silently for agent parsing; the orchestrator speaks in connected prose — known pocket, edge of unknown, one human question — never quoting script stdout, atom IDs, or ledger telemetry to the user."))
   </central_idea>
 
   (protocol-0-philosophy
@@ -59,12 +59,12 @@ metadata:
   (protocol-1-activation
     (on-activation
       1 "read references/session-contract.md for field shapes, evidence kinds, creation, ledger, and script orchestration"
-      2 "when session.json exists run scripts/status.py and open the turn with its one-line ledger"
-      3 "when absent follow missing-session creation; ask only project identity; obtain consent before scripts/init_session.py")
+      2 "when session.json exists run scripts/status.py --brief internally; do not quote its output to the user"
+      3 "when absent follow missing-session creation; ask what the user is working on (display name only); derive slug silently; obtain consent before scripts/init_session.py --name ...")
     (session-root "workproduct/value-proposition/<project-slug>/")
     (canonical-state "session.json")
     (kb-load "read assets/knowledge-base.json when applying scales, high-value rubric, BM 0–10 anchors, experiment library, data traps, or validation funnel")
-    (forbidden 'invent-prior-answers 'advance-without-accepted-answer 'full-canvas-before-atoms 'hand-edit-session-json))
+    (forbidden 'invent-prior-answers 'advance-without-accepted-answer 'full-canvas-before-atoms 'hand-edit-session-json 'quote-script-stdout-to-user 'ask-user-for-slug))
 
   (protocol-2-phase-order
     (sequence profile value-map business-model experiments)
@@ -84,13 +84,22 @@ metadata:
       (offer "satisfy prerequisite atom" or "record explicit bypass decision in session decisions")))
 
   (protocol-3-turn-recipe
+    (voice-recipe
+      (shape "one turn, one paragraph, one primary question")
+      (known "phrase from the last accepted answer or satisfied section — e.g. segment locked, job stated")
+      (edge "what is missing now and why it matters for the next design move — curiosity, not taxonomy labels")
+      (question "rephrase asks from scripts/next_question.py JSON; never paste JSON, accepts_summary, or atom IDs unless user asks what counts as an answer")
+      (forbidden-user-facing "Ledger:, atom=, P08, bombs=, ready_count, focus_atom, slug, path, section strip every turn")
+      (progress-strip "scripts/status.py --sections only on resume, when user asks where am I, or after a module gate — not every turn")
+      (express "skip warm bridge; still one human question"))
+    (scripts-silent
+      (run "status --brief, next_question, accept_answer, gaps, bulk — parse JSON or brief lines internally")
+      (never "quote script stdout verbatim to the user"))
     (shape
-      1 "ledger line from scripts/status.py"
-      2 "section strip from scripts/status.py --sections for the active module"
-      3 "orientation tied to the focus section, not atom pedagogy"
-      4 "micro-lesson only when user asks to teach, on first visit to a section, or at gate review — not every turn"
-      5 "one primary question from scripts/next_question.py (focus_atom + section)"
-      6 "wait for the user's answer")
+      1 "run scripts/status.py --brief and scripts/next_question.py internally"
+      2 "compose voice-recipe paragraph for the user"
+      3 "micro-lesson only when user asks to teach, on first visit to a section, or at gate review — not every turn"
+      4 "wait for the user's answer")
   (draft-map-gap-fill
     (trigger "user brain dump, map what I said, here's what I know, or explicit batching request")
     (flow
@@ -101,7 +110,7 @@ metadata:
   (drop-in-decision-mode
     (trigger "user invokes /value with a decision mid-repo — should I add X, who is this for")
     (flow
-      1 "scripts/status.py --sections plus read session.json"
+      1 "scripts/status.py --brief and --sections plus read session.json internally"
       2 "identify minimum section needed; do not restart at P01 when segment is satisfied"
       3 "ask one decision-framed question or offer draft-map for that section"
       4 "never emit full canvas; never invent missing profile state"))
@@ -147,11 +156,11 @@ metadata:
 
   (protocol-6-resume-and-failure
     (resume
-      1 "run scripts/status.py and scripts/status.py --sections"
-      2 "report last accepted decision in one sentence using section names, not atom IDs"
-      3 "run scripts/next_question.py and ask only the focus atom")
+      1 "run scripts/status.py --brief and scripts/status.py --sections internally"
+      2 "report last accepted decision in one sentence using section names, not atom IDs; optional section strip for user"
+      3 "run scripts/next_question.py and ask via voice-recipe")
     (missing-session
-      "ask project identity only, wait for consent, then scripts/init_session.py"
+      "ask what the user is working on (display name only); derive slug silently; wait for consent; then scripts/init_session.py --name ..."
       (defer "phase-jump, bypass, and satisfy-prerequisite offers until after session.json exists"))
     (invalid-session "stop; identify invalid field; preserve file unchanged")
     (conflicting-answer "record conflict; ask which statement governs; reopen via accept_answer --reopen")
