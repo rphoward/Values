@@ -1,0 +1,333 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/value-skill/session.schema.json",
+  "title": "Value Proposition Session",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "project",
+    "position",
+    "answers",
+    "evidence",
+    "assumptions",
+    "decisions",
+    "unknowns",
+    "artifacts"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "project": {
+      "$ref": "#/$defs/project"
+    },
+    "position": {
+      "$ref": "#/$defs/position"
+    },
+    "answers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/answerRecord"
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidenceRecord"
+      }
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/assumptionRecord"
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/decisionRecord"
+      }
+    },
+    "unknowns": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/unknownRecord"
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/artifactRecord"
+      }
+    }
+  },
+  "$defs": {
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slug", "name", "created_at", "updated_at"],
+      "properties": {
+        "slug": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:[0-9]{4}-(?:(?:01|03|05|07|08|10|12)-(?:0[1-9]|[12][0-9]|3[01])|(?:04|06|09|11)-(?:0[1-9]|[12][0-9]|30)|02-(?:0[1-9]|1[0-9]|2[0-8])))|(?:(?:[0-9]{2}(?:0[48]|[2468][048]|[13579][26])|(?:0[48]|[2468][048]|[13579][26])00)-02-29))T(?:[01][0-9]|2[0-3]):[0-5][0-9]:(?:[0-5][0-9]|60)(?:\\.[0-9]+)?(?:Z|[+-](?:[01][0-9]|2[0-3]):[0-5][0-9])$"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:[0-9]{4}-(?:(?:01|03|05|07|08|10|12)-(?:0[1-9]|[12][0-9]|3[01])|(?:04|06|09|11)-(?:0[1-9]|[12][0-9]|30)|02-(?:0[1-9]|1[0-9]|2[0-8])))|(?:(?:[0-9]{2}(?:0[48]|[2468][048]|[13579][26])|(?:0[48]|[2468][048]|[13579][26])00)-02-29))T(?:[01][0-9]|2[0-3]):[0-5][0-9]:(?:[0-5][0-9]|60)(?:\\.[0-9]+)?(?:Z|[+-](?:[01][0-9]|2[0-3]):[0-5][0-9])$"
+        }
+      }
+    },
+    "position": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["module", "atom_id", "status"],
+      "properties": {
+        "module": {
+          "type": "string",
+          "enum": ["profile", "value-map", "business-model", "experiments"]
+        },
+        "atom_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "type": "string",
+          "enum": ["in_progress", "gate_pending", "completed", "bypassed"]
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "module": {"const": "profile"},
+            "atom_id": {
+              "enum": ["P01", "P02", "P03", "P04", "P05", "P06", "P07", "P08", "P09", "P10", "P11", "P12"]
+            }
+          }
+        },
+        {
+          "properties": {
+            "module": {"const": "value-map"},
+            "atom_id": {
+              "enum": ["V01", "V02", "V03", "V04", "V05", "V06", "V07", "V08"]
+            }
+          }
+        },
+        {
+          "properties": {
+            "module": {"const": "business-model"},
+            "atom_id": {
+              "enum": ["B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08"]
+            }
+          }
+        },
+        {
+          "properties": {
+            "module": {"const": "experiments"},
+            "atom_id": {
+              "enum": ["E01", "E02", "E03", "E04", "E05", "E06", "E07", "E08", "E09", "E10"]
+            }
+          }
+        }
+      ]
+    },
+    "answerRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["atom_id", "answer", "kind", "accepted_at"],
+      "properties": {
+        "atom_id": {
+          "type": "string",
+          "enum": [
+            "P01", "P02", "P03", "P04", "P05", "P06", "P07", "P08", "P09", "P10", "P11", "P12",
+            "V01", "V02", "V03", "V04", "V05", "V06", "V07", "V08",
+            "B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08",
+            "E01", "E02", "E03", "E04", "E05", "E06", "E07", "E08", "E09", "E10"
+          ]
+        },
+        "answer": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["fact", "inference", "hypothesis", "decision", "unknown"]
+        },
+        "accepted_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:[0-9]{4}-(?:(?:01|03|05|07|08|10|12)-(?:0[1-9]|[12][0-9]|3[01])|(?:04|06|09|11)-(?:0[1-9]|[12][0-9]|30)|02-(?:0[1-9]|1[0-9]|2[0-8])))|(?:(?:[0-9]{2}(?:0[48]|[2468][048]|[13579][26])|(?:0[48]|[2468][048]|[13579][26])00)-02-29))T(?:[01][0-9]|2[0-3]):[0-5][0-9]:(?:[0-5][0-9]|60)(?:\\.[0-9]+)?(?:Z|[+-](?:[01][0-9]|2[0-3]):[0-5][0-9])$"
+        }
+      }
+    },
+    "evidenceRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claim", "kind", "source", "strength"],
+      "properties": {
+        "claim": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["fact", "inference", "hypothesis", "decision", "unknown"]
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "strength": {
+          "type": "string",
+          "enum": ["strong", "moderate", "weak", "unknown"]
+        }
+      }
+    },
+    "assumptionRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claim", "criticality", "evidence_status", "source_atom"],
+      "properties": {
+        "claim": {
+          "type": "string",
+          "minLength": 1
+        },
+        "criticality": {
+          "type": "string",
+          "enum": ["high", "medium", "low"]
+        },
+        "evidence_status": {
+          "type": "string",
+          "enum": ["supported", "partial", "unsupported", "unknown"]
+        },
+        "source_atom": {
+          "type": "string",
+          "enum": [
+            "P01", "P02", "P03", "P04", "P05", "P06", "P07", "P08", "P09", "P10", "P11", "P12",
+            "V01", "V02", "V03", "V04", "V05", "V06", "V07", "V08",
+            "B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08",
+            "E01", "E02", "E03", "E04", "E05", "E06", "E07", "E08", "E09", "E10"
+          ]
+        }
+      }
+    },
+    "decisionRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decision",
+        "reason",
+        "source_atom",
+        "resulting_module",
+        "resulting_atom",
+        "resulting_status"
+      ],
+      "properties": {
+        "decision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_atom": {
+          "type": "string",
+          "enum": [
+            "P01", "P02", "P03", "P04", "P05", "P06", "P07", "P08", "P09", "P10", "P11", "P12",
+            "V01", "V02", "V03", "V04", "V05", "V06", "V07", "V08",
+            "B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08",
+            "E01", "E02", "E03", "E04", "E05", "E06", "E07", "E08", "E09", "E10"
+          ]
+        },
+        "resulting_module": {
+          "type": "string",
+          "enum": ["profile", "value-map", "business-model", "experiments"]
+        },
+        "resulting_atom": {
+          "type": "string",
+          "minLength": 1
+        },
+        "resulting_status": {
+          "type": "string",
+          "enum": ["in_progress", "gate_pending", "completed", "bypassed"]
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "resulting_module": {"const": "profile"},
+            "resulting_atom": {
+              "enum": ["P01", "P02", "P03", "P04", "P05", "P06", "P07", "P08", "P09", "P10", "P11", "P12"]
+            }
+          }
+        },
+        {
+          "properties": {
+            "resulting_module": {"const": "value-map"},
+            "resulting_atom": {
+              "enum": ["V01", "V02", "V03", "V04", "V05", "V06", "V07", "V08"]
+            }
+          }
+        },
+        {
+          "properties": {
+            "resulting_module": {"const": "business-model"},
+            "resulting_atom": {
+              "enum": ["B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08"]
+            }
+          }
+        },
+        {
+          "properties": {
+            "resulting_module": {"const": "experiments"},
+            "resulting_atom": {
+              "enum": ["E01", "E02", "E03", "E04", "E05", "E06", "E07", "E08", "E09", "E10"]
+            }
+          }
+        }
+      ]
+    },
+    "unknownRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["question", "blocking"],
+      "properties": {
+        "question": {
+          "type": "string",
+          "minLength": 1
+        },
+        "blocking": {
+          "type": "boolean"
+        }
+      }
+    },
+    "artifactRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "status"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "draft", "final"]
+        }
+      }
+    }
+  }
+}
