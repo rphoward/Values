@@ -11,6 +11,7 @@ from pathlib import Path
 from _session import default_session, save_session
 
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+PACING_CHOICES = ("standard", "express")
 
 
 def main() -> int:
@@ -21,6 +22,12 @@ def main() -> int:
         "--root",
         default="workproduct/value-proposition",
         help="Workproduct root relative to cwd (default: workproduct/value-proposition)",
+    )
+    parser.add_argument(
+        "--pacing-mode",
+        default="standard",
+        choices=PACING_CHOICES,
+        help="Interview pacing (default: standard)",
     )
     args = parser.parse_args()
 
@@ -34,7 +41,7 @@ def main() -> int:
         print(f"Session already exists: {session_path}", file=sys.stderr)
         return 1
 
-    session = default_session(args.slug, args.name)
+    session = default_session(args.slug, args.name, pacing_mode=args.pacing_mode)
     save_session(session_path, session)
     print(f"Created {session_path}")
     return 0

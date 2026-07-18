@@ -20,7 +20,7 @@
       artifacts)
     (optional-top-level pacing_mode)
     (schema-version "1.0 or 1.1 — lazy upgrade on read sets 1.1")
-    (pacing-mode "standard default; express deferred — gate atoms plus priority job only when recorded")
+    (pacing-mode "standard default; express schedules gate spine only — profile P01 P03 P11 P12, value-map V01 V08, business-model B01 B08, experiments E01 E03 E10")
     (project-fields slug name created_at updated_at)
     (slug-format "lowercase ASCII letters, digits, and single hyphens only; must match ^[a-z0-9]+(?:-[a-z0-9]+)*$")
     (position-fields module atom_id status)
@@ -153,7 +153,8 @@
     (off-position-accept "accept_answer.py allows any ready atom; refuses when atom not in ready set")
     (soft-accept "soft true atoms accept kind unknown for taxonomy labels; orchestrator does not loop on nuance unless user asks to teach")
     (draft-map "agent JSON with mappings array; map_gaps.py dry-run; accept_bulk.py validates and writes")
-    (gaps "gaps.py or next_question.py --gaps returns hard_gaps and soft_gaps by section"))
+    (gaps "gaps.py or next_question.py --gaps returns hard_gaps and soft_gaps by section")
+    (express "pacing_mode express limits schedulable atoms to module spine; completion_pct counts spine only; set via init_session --pacing-mode or set_pacing_mode.py"))
 
   (section script-orchestration
     (init scripts/init_session.py — creates session after explicit user consent; agent must not call without consent)
@@ -163,6 +164,7 @@
     (gaps scripts/gaps.py — hard and soft gaps by section)
     (bulk scripts/accept_bulk.py — validate draft-map JSON and append multiple answers)
     (map scripts/map_gaps.py — dry-run draft-map without writes)
+    (pacing scripts/set_pacing_mode.py — set pacing_mode standard or express and recompute focus)
     (milestone scripts/write_milestone.py — fill module template at gate_pending)
     (briefs scripts/write_design_briefs.py — always writes product-design-brief.md, ux-brief.md, app-design-brief.md)
     (forbidden 'agent-hand-writes-session-json 're-ask-answered-atom-without-reopen))

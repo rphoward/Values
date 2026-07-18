@@ -41,6 +41,22 @@ CANONICAL_GATE_PASS = {
     "business-model": "pass business-model gate",
     "experiments": "pass experiments gate",
 }
+EXPRESS_SPINE: dict[str, tuple[str, ...]] = {
+    "profile": ("P01", "P03", "P11", "P12"),
+    "value-map": ("V01", "V08"),
+    "business-model": ("B01", "B08"),
+    "experiments": ("E01", "E03", "E10"),
+}
+EXPRESS_REQUIRES: dict[str, tuple[str, ...]] = {
+    "P03": ("P01",),
+    "P11": ("P03",),
+    "P12": ("P11",),
+    "V08": ("V01",),
+    "B08": ("B01",),
+    "E03": ("E01",),
+    "E10": ("E01", "E03"),
+}
+PACING_MODES = ("standard", "express")
 
 _atom_indexes_built = False
 GATE_ATOMS: dict[str, str] = {}
@@ -117,8 +133,10 @@ def save_session(path: Path, session: dict[str, Any]) -> None:
     path.write_text(json.dumps(session, indent=2) + "\n", encoding="utf-8")
 
 
-def default_session(slug: str, name: str) -> dict[str, Any]:
+def default_session(slug: str, name: str, *, pacing_mode: str = "standard") -> dict[str, Any]:
     _build_atom_indexes()
+    if pacing_mode not in PACING_MODES:
+        raise ValueError(f"Invalid pacing_mode: {pacing_mode!r}")
     timestamp = utc_now_iso()
     session = {
         "schema_version": "1.1",
@@ -140,8 +158,46 @@ def default_session(slug: str, name: str) -> dict[str, Any]:
         "unknowns": [],
         "artifacts": [],
     }
+    if pacing_mode != "standard":
+        session["pacing_mode"] = pacing_mode
     session["ledger"] = recompute_ledger(session)
     return session
+
+
+def pacing_mode(session: dict[str, Any]) -> str:
+    mode = session.get("pacing_mode", "standard")
+    if mode not in PACING_MODES:
+        return "standard"
+    return mode
+
+
+def express_spine_for_module(module: str) -> tuple[str, ...]:
+    return EXPRESS_SPINE.get(module, ())
+
+
+def atom_in_express_spine(atom_id: str) -> bool:
+    module = atom_module(atom_id)
+    return atom_id in express_spine_for_module(module)
+
+
+def effective_requires(session: dict[str, Any], atom: dict[str, Any]) -> list[str]:
+    if pacing_mode(session) != "express":
+        return atom_requires(atom)
+    express = EXPRESS_REQUIRES.get(atom["id"])
+    if express is not None:
+        return list(express)
+    return atom_requires(atom)
+
+
+def schedulable_atom_ids(session: dict[str, Any], atoms: list[dict[str, Any]]) -> set[str]:
+    if pacing_mode(session) != "express":
+        return {atom["id"] for atom in atoms}
+    schedulable: set[str] = set()
+    for module in MODULE_ORDER:
+        if module_bypassed(session, module):
+            continue
+        schedulable.update(express_spine_for_module(module))
+    return schedulable
 
 
 def current_answer(session: dict[str, Any], atom_id: str) -> dict[str, Any] | None:
@@ -269,10 +325,16 @@ def effective_answered_atoms(session: dict[str, Any], atoms: list[dict[str, Any]
 
 
 def completion_pct(session: dict[str, Any], atoms: list[dict[str, Any]]) -> int:
+    answered = effective_answered_atoms(session, atoms)
+    if pacing_mode(session) == "express":
+        spine = schedulable_atom_ids(session, atoms)
+        total = len(spine)
+        if total == 0:
+            return 0
+        return int(round(len(answered & spine) / total * 100))
     total = len(atoms)
     if total == 0:
         return 0
-    answered = effective_answered_atoms(session, atoms)
     return int(round(len(answered) / total * 100))
 
 
@@ -338,6 +400,7 @@ def format_status_line(session: dict[str, Any]) -> str:
     return (
         f"Ledger: phase={ledger['phase']} module={ledger['active_module']} "
         f"atom={position['atom_id']} status={position['status']} "
+        f"pacing={pacing_mode(session)} "
         f"completion={ledger['completion_pct']}% "
         f"milestone={ledger['validation_milestone']} "
         f"answered={','.join(answered) or 'none'} "
@@ -403,10 +466,13 @@ def gate_pending_atom(session: dict[str, Any]) -> dict[str, Any] | None:
 def ready_atoms(session: dict[str, Any], atoms: list[dict[str, Any]]) -> list[str]:
     _build_atom_indexes()
     answered = effective_answered_atoms(session, atoms)
+    schedulable = schedulable_atom_ids(session, atoms)
     ready: list[str] = []
     for atom in atoms:
         atom_id = atom["id"]
         module = atom["module"]
+        if atom_id not in schedulable:
+            continue
         if module_bypassed(session, module):
             continue
         if atom_id in answered:
@@ -414,7 +480,7 @@ def ready_atoms(session: dict[str, Any], atoms: list[dict[str, Any]]) -> list[st
         first_atom = MODULE_ATOMS[module][0]
         if atom_id == first_atom and not module_entry_ready(session, module):
             continue
-        requires = atom_requires(atom)
+        requires = effective_requires(session, atom)
         if all(req in answered for req in requires):
             ready.append(atom_id)
     return ready

@@ -41,6 +41,7 @@ metadata:
       (gaps scripts/gaps.py)
       (bulk scripts/accept_bulk.py)
       (map scripts/map_gaps.py)
+      (pacing scripts/set_pacing_mode.py)
       (milestone scripts/write_milestone.py)
       (briefs scripts/write_design_briefs.py)))
 
@@ -104,6 +105,12 @@ metadata:
       2 "identify minimum section needed; do not restart at P01 when segment is satisfied"
       3 "ask one decision-framed question or offer draft-map for that section"
       4 "never emit full canvas; never invent missing profile state"))
+  (express-pacing
+    (trigger "user asks to move fast, skip nuance, or gate-only path before session exists or mid-session")
+    (init "scripts/init_session.py --pacing-mode express after consent")
+    (switch "scripts/set_pacing_mode.py --mode express|standard; recompute focus immediately")
+    (spine "profile P01 P03 P11 P12; value-map V01 V08; business-model B01 B08; experiments E01 E03 E10")
+    (gate-review "gate pass still requires explicit unknowns for skipped profile areas; do not invent facts"))
   (batching "draft-map-gap-fill only unless user explicitly requests batching")
   (follow-up "when answer is vague on a hard atom: one focused follow-up; soft atoms accept kind unknown for taxonomy nuance")
   (acceptance "advance when the active atom's (accepts ...) criteria are met or soft atom accepts unknown labels; then scripts/accept_answer.py on any ready atom")
