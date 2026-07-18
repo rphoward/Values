@@ -18,6 +18,9 @@
       decisions
       unknowns
       artifacts)
+    (optional-top-level pacing_mode)
+    (schema-version "1.0 or 1.1 — lazy upgrade on read sets 1.1")
+    (pacing-mode "standard default; express deferred — gate atoms plus priority job only when recorded")
     (project-fields slug name created_at updated_at)
     (slug-format "lowercase ASCII letters, digits, and single hyphens only; must match ^[a-z0-9]+(?:-[a-z0-9]+)*$")
     (position-fields module atom_id status)
@@ -32,7 +35,7 @@
     (ask-consent "one primary question: create workproduct/value-proposition/<project-slug>/session.json?")
     (wait-for "explicit consent before creating session.json")
     (initial-document
-      (schema_version "1.0")
+      (schema_version "1.1")
       (project
         (slug "confirmed project slug")
         (name "confirmed display name")
@@ -143,11 +146,23 @@
     (ask "current atom only")
     (forbidden 'repeat-completed-atoms 'invent-missing-state))
 
+  (section scheduler
+    (atoms-index "assets/atoms.json fields requires section soft per atom; unlocks retained for gate bridges only")
+    (ready-set "all atoms whose requires subset is answered and module not bypassed; first atom of each module also requires prior module completed or bypassed")
+    (focus-atom "scripts/next_question.py pick among ready set: gate_pending milestone first, then section with fewest satisfied atoms, then lowest atom id")
+    (off-position-accept "accept_answer.py allows any ready atom; refuses when atom not in ready set")
+    (soft-accept "soft true atoms accept kind unknown for taxonomy labels; orchestrator does not loop on nuance unless user asks to teach")
+    (draft-map "agent JSON with mappings array; map_gaps.py dry-run; accept_bulk.py validates and writes")
+    (gaps "gaps.py or next_question.py --gaps returns hard_gaps and soft_gaps by section"))
+
   (section script-orchestration
     (init scripts/init_session.py — creates session after explicit user consent; agent must not call without consent)
-    (status scripts/status.py — one-line ledger; run on activation and open every turn)
-    (next scripts/next_question.py — emit next unsatisfied atom; agent asks only this question)
-    (accept scripts/accept_answer.py — append answer, optional --records sidecar for evidence assumptions decisions unknowns artifacts; refuse duplicate without --reopen)
+    (status scripts/status.py — one-line ledger; --sections prints section strip; run on activation and open every turn)
+    (next scripts/next_question.py — emit scheduler focus atom with section and ready_count; --gaps for gap lists)
+    (accept scripts/accept_answer.py — append answer on any ready atom; optional --records sidecar; refuse duplicate without --reopen)
+    (gaps scripts/gaps.py — hard and soft gaps by section)
+    (bulk scripts/accept_bulk.py — validate draft-map JSON and append multiple answers)
+    (map scripts/map_gaps.py — dry-run draft-map without writes)
     (milestone scripts/write_milestone.py — fill module template at gate_pending)
     (briefs scripts/write_design_briefs.py — always writes product-design-brief.md, ux-brief.md, app-design-brief.md)
     (forbidden 'agent-hand-writes-session-json 're-ask-answered-atom-without-reopen))

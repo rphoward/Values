@@ -74,7 +74,7 @@
     (visual "Picture the job as a boat and each pain as an anchor: the anchor that most slows real progress deserves attention first.")
     (kb pain-severity-scale customer_profile_triggers.pain_severity_scale)
     (asks "Which pains most obstruct the accepted jobs?")
-    (accepts "Names at least one bad outcome, obstacle, or risk and orders pains using extreme, moderate, or light severity with a stated basis; records absent evidence as unknown.")
+    (accepts "Names at least one bad outcome, obstacle, or risk; severity labels optional on soft accept and kind unknown is valid when labels are not established.")
     (writes "append answers record {atom_id P07, answer accepted text, kind accepted fact, hypothesis, or unknown label, accepted_at current RFC 3339 timestamp}; when supported append evidence record {claim accepted pain and severity, kind accepted fact or inference label, source accepted source, strength accepted strength}; when unsupported append assumptions record {claim proposed pain and severity, criticality high, evidence_status unsupported, source_atom P07}; when evidence is absent append unknowns record {question pain severity evidence not established, blocking false}; set project.updated_at to accepted_at; set position.module profile, position.atom_id P08, position.status in_progress")
     (unlocks P08))
 
@@ -84,7 +84,7 @@
     (teaches "Gains are outcomes customers require, expect, desire, or would value unexpectedly. They follow pains so positive outcomes are not merely restated fixes for every obstacle.")
     (kb gain-relevance-scale customer_profile_triggers.gain_relevance_scale)
     (asks "Which outcomes count as gains for this segment?")
-    (accepts "Names at least one outcome and classifies it as essential, expected, desired, or unexpected with a stated basis; labels missing evidence unknown.")
+    (accepts "Names at least one outcome; relevance labels optional on soft accept and kind unknown is valid when classification is not established.")
     (writes "append answers record {atom_id P08, answer accepted text, kind accepted fact, hypothesis, or unknown label, accepted_at current RFC 3339 timestamp}; when supported append evidence record {claim accepted gain and relevance, kind accepted fact or inference label, source accepted source, strength accepted strength}; when unsupported append assumptions record {claim proposed gain and relevance, criticality medium, evidence_status unsupported, source_atom P08}; when evidence is absent append unknowns record {question gain relevance evidence not established, blocking false}; set project.updated_at to accepted_at; set position.module profile, position.atom_id P09, position.status in_progress")
     (unlocks P09))
 

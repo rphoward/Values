@@ -19,7 +19,11 @@
   "properties": {
     "schema_version": {
       "type": "string",
-      "const": "1.0"
+      "enum": ["1.0", "1.1"]
+    },
+    "pacing_mode": {
+      "type": "string",
+      "enum": ["standard", "express"]
     },
     "project": {
       "$ref": "#/$defs/project"

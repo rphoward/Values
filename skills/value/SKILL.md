@@ -38,12 +38,15 @@ metadata:
       (status scripts/status.py)
       (next scripts/next_question.py)
       (accept scripts/accept_answer.py)
+      (gaps scripts/gaps.py)
+      (bulk scripts/accept_bulk.py)
+      (map scripts/map_gaps.py)
       (milestone scripts/write_milestone.py)
       (briefs scripts/write_design_briefs.py)))
 
   <central_idea>
   (center-of-gravity
-    (invariant "Teach value proposition design one atom at a time. Canonical state lives in workproduct/value-proposition/<project-slug>/session.json. Scripts own session writes and ledger recompute; the orchestrator surfaces ledger each turn, asks only the next atom, and loads knowledge-base when applying scales, scores, experiments, or traps."))
+    (invariant "Teach value proposition design with DAG-paced atoms grouped by canvas section. Canonical state lives in workproduct/value-proposition/<project-slug>/session.json. Scripts own session writes, scheduler focus, and ledger recompute; the orchestrator surfaces ledger and section strip each turn, asks the scheduler focus atom, and loads knowledge-base when applying scales, scores, experiments, or traps."))
   </central_idea>
 
   (protocol-0-philosophy
@@ -82,13 +85,28 @@ metadata:
   (protocol-3-turn-recipe
     (shape
       1 "ledger line from scripts/status.py"
-      2 "orientation — name current module and why this atom follows the last accepted answer"
-      3 "micro-lesson or compact original visual analogy when useful — never reproduce book figures"
-      4 "one primary question from scripts/next_question.py only"
-      5 "wait for the user's answer")
-  (batching "up to three tightly related questions only when the user explicitly requests batching")
-  (follow-up "when answer is vague, inferred, or missing evidence: one focused follow-up; do not advance")
-  (acceptance "advance only when the active atom's (accepts ...) criteria are met; then scripts/accept_answer.py")
+      2 "section strip from scripts/status.py --sections for the active module"
+      3 "orientation tied to the focus section, not atom pedagogy"
+      4 "micro-lesson only when user asks to teach, on first visit to a section, or at gate review — not every turn"
+      5 "one primary question from scripts/next_question.py (focus_atom + section)"
+      6 "wait for the user's answer")
+  (draft-map-gap-fill
+    (trigger "user brain dump, map what I said, here's what I know, or explicit batching request")
+    (flow
+      1 "ask for one paragraph covering the current section or whole profile if user prefers"
+      2 "emit draft-map JSON; run scripts/map_gaps.py then scripts/accept_bulk.py"
+      3 "run scripts/gaps.py or next_question.py --gaps; ask only blocking hard gaps; list soft gaps as refine later"
+      4 "resume section-aware single-question flow"))
+  (drop-in-decision-mode
+    (trigger "user invokes /value with a decision mid-repo — should I add X, who is this for")
+    (flow
+      1 "scripts/status.py --sections plus read session.json"
+      2 "identify minimum section needed; do not restart at P01 when segment is satisfied"
+      3 "ask one decision-framed question or offer draft-map for that section"
+      4 "never emit full canvas; never invent missing profile state"))
+  (batching "draft-map-gap-fill only unless user explicitly requests batching")
+  (follow-up "when answer is vague on a hard atom: one focused follow-up; soft atoms accept kind unknown for taxonomy nuance")
+  (acceptance "advance when the active atom's (accepts ...) criteria are met or soft atom accepts unknown labels; then scripts/accept_answer.py on any ready atom")
   (blocking-unknown "retain the active atom when its reference marks an unresolved boundary or missing result blocking; pass --stay to accept_answer.py")
   (reopen "when user reopens an atom use accept_answer.py --reopen --conflict-note; do not re-ask answered atoms otherwise")
   (forbidden 'emit-full-canvas-matrix-or-scorecard-before-required-answers 're-ask-without-reopen))
@@ -122,9 +140,9 @@ metadata:
 
   (protocol-6-resume-and-failure
     (resume
-      1 "run scripts/status.py"
-      2 "report last accepted decision in one sentence"
-      3 "run scripts/next_question.py and ask only that atom")
+      1 "run scripts/status.py and scripts/status.py --sections"
+      2 "report last accepted decision in one sentence using section names, not atom IDs"
+      3 "run scripts/next_question.py and ask only the focus atom")
     (missing-session
       "ask project identity only, wait for consent, then scripts/init_session.py"
       (defer "phase-jump, bypass, and satisfy-prerequisite offers until after session.json exists"))

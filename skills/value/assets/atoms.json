@@ -6,7 +6,10 @@
       "asks": "Which specific customer segment are we profiling?",
       "accepts_summary": "Names a segment with exclusion; labels scope decision; blocking unknown keeps P01 active.",
       "unlocks": "P02",
-      "gate": false
+      "gate": false,
+      "requires": [],
+      "section": "Segment",
+      "soft": false
     },
     {
       "id": "P02",
@@ -14,7 +17,12 @@
       "asks": "What event starts this segment's effort to make progress?",
       "accepts_summary": "Describes observable situation and trigger, or labels unknown.",
       "unlocks": "P03",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "P01"
+      ],
+      "section": "Situation",
+      "soft": false
     },
     {
       "id": "P03",
@@ -22,7 +30,12 @@
       "asks": "What practical progress is this segment trying to make in that situation?",
       "accepts_summary": "States progress as action and outcome with evidence kind labeled.",
       "unlocks": "P04",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "P02"
+      ],
+      "section": "Jobs",
+      "soft": false
     },
     {
       "id": "P04",
@@ -30,7 +43,12 @@
       "asks": "How does this segment want relevant other people to see them while they pursue this job?",
       "accepts_summary": "Names audience and desired impression, or records unknown.",
       "unlocks": "P05",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "P03"
+      ],
+      "section": "Jobs",
+      "soft": true
     },
     {
       "id": "P05",
@@ -38,7 +56,12 @@
       "asks": "What does this segment want to feel, or avoid feeling, while making this progress?",
       "accepts_summary": "Names desired or avoided feeling grounded in situation, or unknown.",
       "unlocks": "P06",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "P03"
+      ],
+      "section": "Jobs",
+      "soft": true
     },
     {
       "id": "P06",
@@ -46,23 +69,38 @@
       "asks": "Which buying, co-creating, or transferring tasks accompany this segment's main job?",
       "accepts_summary": "Names supporting tasks by category, or none/unknown.",
       "unlocks": "P07",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "P03"
+      ],
+      "section": "Jobs",
+      "soft": true
     },
     {
       "id": "P07",
       "module": "profile",
       "asks": "Which pains most obstruct the accepted jobs?",
-      "accepts_summary": "Names pains ordered by extreme, moderate, or light severity.",
+      "accepts_summary": "Names pains with severity labels optional; unknown labels valid on soft accept.",
       "unlocks": "P08",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "P03"
+      ],
+      "section": "Pains",
+      "soft": true
     },
     {
       "id": "P08",
       "module": "profile",
       "asks": "Which outcomes count as gains for this segment?",
-      "accepts_summary": "Names gains classified essential, expected, desired, or unexpected.",
+      "accepts_summary": "Names gains with relevance labels optional; unknown labels valid on soft accept.",
       "unlocks": "P09",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "P03"
+      ],
+      "section": "Gains",
+      "soft": true
     },
     {
       "id": "P09",
@@ -70,7 +108,12 @@
       "asks": "What does this segment do today instead, including workarounds or choosing not to act?",
       "accepts_summary": "Names current behavior or explicitly unknown.",
       "unlocks": "P10",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "P01"
+      ],
+      "section": "Alternatives",
+      "soft": true
     },
     {
       "id": "P10",
@@ -78,7 +121,13 @@
       "asks": "What observed action best supports this profile?",
       "accepts_summary": "Provides claim, kind, source, strength; behavior outranks spoken approval.",
       "unlocks": "P11",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "P03",
+        "P09"
+      ],
+      "section": "Evidence",
+      "soft": true
     },
     {
       "id": "P11",
@@ -86,7 +135,13 @@
       "asks": "Which accepted job should be the priority?",
       "accepts_summary": "Selects one job with reason tied to importance, immediacy, dissatisfaction, or economics.",
       "unlocks": "P12",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "P03",
+        "P07"
+      ],
+      "section": "Jobs",
+      "soft": false
     },
     {
       "id": "P12",
@@ -94,7 +149,12 @@
       "asks": "Does this customer profile pass its gate now?",
       "accepts_summary": "Explicit pass or reopen decision with reason and target atom.",
       "unlocks": "V01",
-      "gate": true
+      "gate": true,
+      "requires": [
+        "P11"
+      ],
+      "section": "Gate",
+      "soft": false
     },
     {
       "id": "V01",
@@ -102,7 +162,12 @@
       "asks": "Which single offering are we mapping?",
       "accepts_summary": "Names one offering with boundary exclusion; blocking unknown keeps V01 active.",
       "unlocks": "V02",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "P12"
+      ],
+      "section": "Offering",
+      "soft": false
     },
     {
       "id": "V02",
@@ -110,7 +175,12 @@
       "asks": "What products or services are actually included in this offering?",
       "accepts_summary": "Lists concrete included items; avoids claiming benefits as deliverables.",
       "unlocks": "V03",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "V01"
+      ],
+      "section": "Offering",
+      "soft": false
     },
     {
       "id": "V03",
@@ -118,7 +188,13 @@
       "asks": "How does each relevant part of the offering reduce a specific accepted customer pain?",
       "accepts_summary": "Links relief to included item and accepted pain; labels unsupported effects hypothesis.",
       "unlocks": "V04",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "V02",
+        "P07"
+      ],
+      "section": "Pain relievers",
+      "soft": false
     },
     {
       "id": "V04",
@@ -126,7 +202,13 @@
       "asks": "How does each relevant part of the offering create a specific accepted customer gain?",
       "accepts_summary": "Links effect to included item and accepted gain; labels unsupported effects hypothesis.",
       "unlocks": "V05",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "V03",
+        "P08"
+      ],
+      "section": "Gain creators",
+      "soft": false
     },
     {
       "id": "V05",
@@ -134,7 +216,13 @@
       "asks": "Which accepted job, pain, or gain does each offering item, pain reliever, and gain creator serve?",
       "accepts_summary": "Traceable match for every item or marks unmatched; no invented profile claims.",
       "unlocks": "V06",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "V04",
+        "P01"
+      ],
+      "section": "Fit links",
+      "soft": false
     },
     {
       "id": "V06",
@@ -142,7 +230,12 @@
       "asks": "Which unmatched items are orphan candidates?",
       "accepts_summary": "Names unmatched items with deferred disposition, or empty when all matched.",
       "unlocks": "V07",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "V05"
+      ],
+      "section": "Orphan candidates",
+      "soft": false
     },
     {
       "id": "V07",
@@ -150,7 +243,12 @@
       "asks": "What meaningful difference does this offering provide over the accepted current alternatives for the priority job?",
       "accepts_summary": "Specific difference tied to accepted job, pain, or gain with evidence label.",
       "unlocks": "V08",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "V06"
+      ],
+      "section": "Differentiation",
+      "soft": false
     },
     {
       "id": "V08",
@@ -158,7 +256,12 @@
       "asks": "Does this value map pass its gate now?",
       "accepts_summary": "Explicit pass or reopen decision with reason and target atom.",
       "unlocks": "B01",
-      "gate": true
+      "gate": true,
+      "requires": [
+        "V07"
+      ],
+      "section": "Gate",
+      "soft": false
     },
     {
       "id": "B01",
@@ -166,7 +269,12 @@
       "asks": "Through which concrete channel path will the accepted segment discover, buy, receive, and use this offering?",
       "accepts_summary": "Describes channel stages; labels untested stages hypothesis or unknown.",
       "unlocks": "B02",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "V08"
+      ],
+      "section": "Delivery",
+      "soft": false
     },
     {
       "id": "B02",
@@ -174,7 +282,12 @@
       "asks": "What relationship must the business maintain with this segment across the accepted channel path?",
       "accepts_summary": "Names required interactions and performers; marks unestablished unknown.",
       "unlocks": "B03",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "B01"
+      ],
+      "section": "Relationships",
+      "soft": false
     },
     {
       "id": "B03",
@@ -182,7 +295,12 @@
       "asks": "What payment behavior will fund this offering?",
       "accepts_summary": "States payer, exchange, recurrence, cash timing with evidence labels.",
       "unlocks": "B04",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "B02"
+      ],
+      "section": "Revenue",
+      "soft": false
     },
     {
       "id": "B04",
@@ -190,7 +308,12 @@
       "asks": "Which activities and resources are indispensable to deliver the accepted value map through this model?",
       "accepts_summary": "Names indispensable work and assets with ownership labeled.",
       "unlocks": "B05",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "B03"
+      ],
+      "section": "Resources",
+      "soft": false
     },
     {
       "id": "B05",
@@ -198,7 +321,12 @@
       "asks": "What external support and spending does this model require?",
       "accepts_summary": "Names partners, dependencies, principal costs with evidence.",
       "unlocks": "B06",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "B04"
+      ],
+      "section": "Costs",
+      "soft": false
     },
     {
       "id": "B06",
@@ -206,7 +334,12 @@
       "asks": "What becomes the first binding constraint as demand grows?",
       "accepts_summary": "Constraint with growth behavior and basis, or blocking unknown keeps B06 active.",
       "unlocks": "B07",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "B05"
+      ],
+      "section": "Scale",
+      "soft": false
     },
     {
       "id": "B07",
@@ -214,7 +347,12 @@
       "asks": "What evidenced switching behavior or hard-to-copy model advantage could protect this business?",
       "accepts_summary": "Concrete switching factor or defensibility mechanism with evidence, or none established.",
       "unlocks": "B08",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "B06"
+      ],
+      "section": "Defensibility",
+      "soft": false
     },
     {
       "id": "B08",
@@ -222,7 +360,12 @@
       "asks": "Does this business model pass its gate now?",
       "accepts_summary": "Explicit pass or reopen decision; pass requires content or explicit unknown in every area.",
       "unlocks": "E01",
-      "gate": true
+      "gate": true,
+      "requires": [
+        "B07"
+      ],
+      "section": "Gate",
+      "soft": false
     },
     {
       "id": "E01",
@@ -230,7 +373,12 @@
       "asks": "Which assumptions must be true for this design to succeed?",
       "accepts_summary": "At least one falsifiable assumption per applicable category.",
       "unlocks": "E02",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "B08"
+      ],
+      "section": "Hypothesis",
+      "soft": false
     },
     {
       "id": "E02",
@@ -238,7 +386,12 @@
       "asks": "How should the inventoried assumptions be ranked for testing?",
       "accepts_summary": "Assigns criticality and evidence status to each assumption.",
       "unlocks": "E03",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "E01"
+      ],
+      "section": "Evidence status",
+      "soft": false
     },
     {
       "id": "E03",
@@ -246,7 +399,12 @@
       "asks": "Which assumption should be tested next?",
       "accepts_summary": "Selects one assumption with consequence of failure and evidence gap.",
       "unlocks": "E04",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "E02"
+      ],
+      "section": "Hypothesis",
+      "soft": false
     },
     {
       "id": "E04",
@@ -254,7 +412,12 @@
       "asks": "What smallest ethical experiment could expose the selected hypothesis to observable customer behavior?",
       "accepts_summary": "Names participants, setup, action, observation tied to hypothesis.",
       "unlocks": "E05",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "E03"
+      ],
+      "section": "Method",
+      "soft": false
     },
     {
       "id": "E05",
@@ -262,7 +425,12 @@
       "asks": "What result would count as support for this hypothesis?",
       "accepts_summary": "Defines metric, threshold, time window, and result classification.",
       "unlocks": "E06",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "E04"
+      ],
+      "section": "Threshold",
+      "soft": false
     },
     {
       "id": "E06",
@@ -270,7 +438,12 @@
       "asks": "How strong is the evidence this experiment is designed to produce?",
       "accepts_summary": "Names required behavior, alternative explanation, and credible alternative direction.",
       "unlocks": "E07",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "E05"
+      ],
+      "section": "Evidence status",
+      "soft": false
     },
     {
       "id": "E07",
@@ -278,7 +451,12 @@
       "asks": "Do you accept the assembled test card as written?",
       "accepts_summary": "Confirms or corrects test card; acceptance is explicit decision.",
       "unlocks": "E08",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "E06"
+      ],
+      "section": "Decision",
+      "soft": false
     },
     {
       "id": "E08",
@@ -286,7 +464,12 @@
       "asks": "What observable result did the test produce?",
       "accepts_summary": "Prior hypothesis, raw observation, source, strength; absent result is blocking unknown.",
       "unlocks": "E09",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "E07"
+      ],
+      "section": "Result",
+      "soft": false
     },
     {
       "id": "E09",
@@ -294,7 +477,12 @@
       "asks": "What should change next because of this result?",
       "accepts_summary": "One concrete next action citing result and threshold.",
       "unlocks": "E10",
-      "gate": false
+      "gate": false,
+      "requires": [
+        "E08"
+      ],
+      "section": "Decision",
+      "soft": false
     },
     {
       "id": "E10",
@@ -302,7 +490,13 @@
       "asks": "Does this experiment cycle pass its gate now?",
       "accepts_summary": "Explicit pass or reopen; pass requires hypothesis, test card, result, learning, next decision.",
       "unlocks": null,
-      "gate": true
+      "gate": true,
+      "requires": [
+        "E09"
+      ],
+      "section": "Decision",
+      "soft": false
     }
-  ]
+  ],
+  "schema_version": "1.1"
 }

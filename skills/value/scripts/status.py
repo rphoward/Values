@@ -7,7 +7,14 @@ import argparse
 import sys
 from pathlib import Path
 
-from _session import format_status_line, load_session, recompute_ledger, save_session
+from _session import (
+    format_section_strip,
+    format_status_line,
+    load_atoms,
+    load_session,
+    recompute_ledger,
+    save_session,
+)
 
 
 def main() -> int:
@@ -17,6 +24,11 @@ def main() -> int:
         "--refresh",
         action="store_true",
         help="Recompute ledger fields and write session.json",
+    )
+    parser.add_argument(
+        "--sections",
+        action="store_true",
+        help="Print section strip for the active module",
     )
     args = parser.parse_args()
 
@@ -28,7 +40,10 @@ def main() -> int:
     session["ledger"] = recompute_ledger(session)
     if args.refresh:
         save_session(args.session, session)
-    print(format_status_line(session))
+    if args.sections:
+        print(format_section_strip(session, load_atoms()))
+    else:
+        print(format_status_line(session))
     return 0
 
 

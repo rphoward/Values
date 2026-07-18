@@ -14,7 +14,8 @@
       "Pain relievers": ["V03"],
       "Gain creators": ["V04"],
       "Fit links": ["V05"],
-      "Orphan candidates": ["V06"]
+      "Orphan candidates": ["V06"],
+      "Differentiation": ["V07"]
     },
     "business-model": {
       "Delivery": ["B01"],

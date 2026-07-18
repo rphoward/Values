@@ -46,6 +46,13 @@ _atom_indexes_built = False
 GATE_ATOMS: dict[str, str] = {}
 MODULE_ATOMS: dict[str, tuple[str, ...]] = {}
 ATOM_MODULE_BY_ID: dict[str, str] = {}
+REVERSE_UNLOCKS: dict[str, list[str]] = {}
+SECTION_STRIP_SYMBOLS = {
+    "empty": "·",
+    "partial": "◐",
+    "satisfied": "✓",
+    "unknown_ok": "✓?",
+}
 
 
 def utc_now_iso() -> str:
@@ -66,22 +73,27 @@ def load_section_map() -> dict[str, Any]:
 
 
 def _build_atom_indexes() -> None:
-    global _atom_indexes_built, GATE_ATOMS, MODULE_ATOMS, ATOM_MODULE_BY_ID
+    global _atom_indexes_built, GATE_ATOMS, MODULE_ATOMS, ATOM_MODULE_BY_ID, REVERSE_UNLOCKS
     if _atom_indexes_built:
         return
     module_atoms: dict[str, list[str]] = {module: [] for module in MODULE_ORDER}
     gate_atoms: dict[str, str] = {}
     atom_module_by_id: dict[str, str] = {}
+    reverse_unlocks: dict[str, list[str]] = {}
     for atom in load_atoms():
         atom_id = atom["id"]
         module = atom["module"]
         module_atoms[module].append(atom_id)
         atom_module_by_id[atom_id] = module
+        unlocks = atom.get("unlocks")
+        if unlocks:
+            reverse_unlocks.setdefault(unlocks, []).append(atom_id)
         if atom.get("gate"):
             gate_atoms[atom_id] = module
     GATE_ATOMS = gate_atoms
     MODULE_ATOMS = {module: tuple(ids) for module, ids in module_atoms.items()}
     ATOM_MODULE_BY_ID = atom_module_by_id
+    REVERSE_UNLOCKS = reverse_unlocks
     _atom_indexes_built = True
 
 
@@ -89,8 +101,15 @@ def atom_by_id(atoms: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     return {atom["id"]: atom for atom in atoms}
 
 
+def migrate_session_if_needed(session: dict[str, Any]) -> None:
+    if session.get("schema_version") == "1.0":
+        session["schema_version"] = "1.1"
+
+
 def load_session(path: Path) -> dict[str, Any]:
-    return load_json(path)
+    session = load_json(path)
+    migrate_session_if_needed(session)
+    return session
 
 
 def save_session(path: Path, session: dict[str, Any]) -> None:
@@ -102,7 +121,7 @@ def default_session(slug: str, name: str) -> dict[str, Any]:
     _build_atom_indexes()
     timestamp = utc_now_iso()
     session = {
-        "schema_version": "1.0",
+        "schema_version": "1.1",
         "project": {
             "slug": slug,
             "name": name,
@@ -174,10 +193,9 @@ def records_allow_off_position(records_payload: dict[str, Any] | None) -> bool:
 
 def off_position_accept_hint(active_atom_id: str) -> str:
     return (
-        f"Off-position accept for active atom {active_atom_id}: "
-        "use --reopen --conflict-note to revisit a prior atom, or pass "
-        "--records with a bypass <module> gate decision (or resulting position) "
-        "before accepting a different atom."
+        f"Atom is not in the ready set (focus={active_atom_id}). "
+        "Accept only ready atoms, or use --reopen --conflict-note, --stay, "
+        "or --records with a bypass gate decision."
     )
 
 
@@ -189,14 +207,16 @@ def can_accept_atom(
     stay: bool,
     records_payload: dict[str, Any] | None,
 ) -> tuple[bool, str | None]:
-    active_atom_id = session["position"]["atom_id"]
-    if atom_id == active_atom_id:
-        return True, None
     if reopen or stay:
+        return True, None
+    if atom_id == session["position"]["atom_id"]:
         return True, None
     if records_allow_off_position(records_payload):
         return True, None
-    return False, off_position_accept_hint(active_atom_id)
+    atoms = load_atoms()
+    if atom_id in ready_atoms(session, atoms):
+        return True, None
+    return False, off_position_accept_hint(session["position"]["atom_id"])
 
 
 def module_bypassed(session: dict[str, Any], module: str) -> bool:
@@ -325,17 +345,225 @@ def format_status_line(session: dict[str, Any]) -> str:
     )
 
 
+def atom_requires(atom: dict[str, Any]) -> list[str]:
+    if "requires" in atom:
+        return list(atom["requires"])
+    _build_atom_indexes()
+    return list(REVERSE_UNLOCKS.get(atom["id"], []))
+
+
+def build_dag(atoms: list[dict[str, Any]]) -> dict[str, list[str]]:
+    return {atom["id"]: atom_requires(atom) for atom in atoms}
+
+
+def detect_dag_cycles(atoms: list[dict[str, Any]]) -> list[str]:
+    graph = build_dag(atoms)
+    visiting: set[str] = set()
+    visited: set[str] = set()
+    cycles: list[str] = []
+
+    def visit(node: str, stack: list[str]) -> None:
+        if node in visiting:
+            cycles.append(" -> ".join(stack + [node]))
+            return
+        if node in visited:
+            return
+        visiting.add(node)
+        for neighbor in graph.get(node, []):
+            visit(neighbor, stack + [node])
+        visiting.remove(node)
+        visited.add(node)
+
+    for atom_id in graph:
+        visit(atom_id, [])
+    return cycles
+
+
+def module_entry_ready(session: dict[str, Any], module: str) -> bool:
+    if module == MODULE_ORDER[0]:
+        return True
+    prior = MODULE_ORDER[MODULE_ORDER.index(module) - 1]
+    return module_outcome(session, prior) in {"completed", "bypassed"}
+
+
+def gate_pending_atom(session: dict[str, Any]) -> dict[str, Any] | None:
+    position = session["position"]
+    if position.get("status") != "gate_pending":
+        return None
+    gate_atom_id = position["atom_id"]
+    module = atom_module(gate_atom_id)
+    artifact = GATE_ARTIFACTS[module]
+    if artifact_status(session, artifact) == "final":
+        return None
+    atoms = load_atoms()
+    index = atom_by_id(atoms)
+    return index.get(gate_atom_id)
+
+
+def ready_atoms(session: dict[str, Any], atoms: list[dict[str, Any]]) -> list[str]:
+    _build_atom_indexes()
+    answered = effective_answered_atoms(session, atoms)
+    ready: list[str] = []
+    for atom in atoms:
+        atom_id = atom["id"]
+        module = atom["module"]
+        if module_bypassed(session, module):
+            continue
+        if atom_id in answered:
+            continue
+        first_atom = MODULE_ATOMS[module][0]
+        if atom_id == first_atom and not module_entry_ready(session, module):
+            continue
+        requires = atom_requires(atom)
+        if all(req in answered for req in requires):
+            ready.append(atom_id)
+    return ready
+
+
+def section_status(
+    session: dict[str, Any], atoms: list[dict[str, Any]], module: str
+) -> dict[str, str]:
+    section_map = load_section_map()["milestones"].get(module, {})
+    answered = effective_answered_atoms(session, atoms)
+    index = atom_by_id(atoms)
+    status: dict[str, str] = {}
+    for section, atom_ids in section_map.items():
+        answered_ids = [atom_id for atom_id in atom_ids if atom_id in answered]
+        if not answered_ids:
+            status[section] = "empty"
+            continue
+        if len(answered_ids) < len(atom_ids):
+            status[section] = "partial"
+            continue
+        soft_ids = [atom_id for atom_id in atom_ids if index[atom_id].get("soft")]
+        if soft_ids and all(
+            (answer := current_answer(session, atom_id)) is not None
+            and answer.get("kind") == "unknown"
+            for atom_id in soft_ids
+        ):
+            status[section] = "unknown_ok"
+        else:
+            status[section] = "satisfied"
+    return status
+
+
+def pick_focus_atom(
+    session: dict[str, Any], atoms: list[dict[str, Any]]
+) -> dict[str, Any] | None:
+    pending_gate = gate_pending_atom(session)
+    if pending_gate is not None:
+        return pending_gate
+
+    ready_ids = ready_atoms(session, atoms)
+    if not ready_ids:
+        return None
+
+    index = atom_by_id(atoms)
+    answered = effective_answered_atoms(session, atoms)
+    by_module: dict[str, list[str]] = {}
+    for atom_id in ready_ids:
+        by_module.setdefault(atom_module(atom_id), []).append(atom_id)
+
+    for module in MODULE_ORDER:
+        module_ready = by_module.get(module)
+        if not module_ready:
+            continue
+        statuses = section_status(session, atoms, module)
+        section_map = load_section_map()["milestones"].get(module, {})
+        section_order = list(section_map.keys())
+        ready_by_section: dict[str, list[str]] = {}
+        for atom_id in module_ready:
+            ready_by_section.setdefault(index[atom_id]["section"], []).append(atom_id)
+
+        def section_rank(section_name: str) -> tuple[int, int]:
+            atom_ids = section_map.get(section_name, [])
+            answered_count = sum(1 for atom_id in atom_ids if atom_id in answered)
+            try:
+                order = section_order.index(section_name)
+            except ValueError:
+                order = len(section_order)
+            return (answered_count, order)
+
+        best_section = min(ready_by_section.keys(), key=section_rank)
+        focus_id = min(ready_by_section[best_section])
+        return index[focus_id]
+    return None
+
+
+def schedule_next_atom(
+    session: dict[str, Any], atoms: list[dict[str, Any]]
+) -> dict[str, Any] | None:
+    return pick_focus_atom(session, atoms)
+
+
+def format_section_strip(
+    session: dict[str, Any], atoms: list[dict[str, Any]], module: str | None = None
+) -> str:
+    active_module = module or session["position"]["module"]
+    statuses = section_status(session, atoms, active_module)
+    if not statuses:
+        return f"{active_module}: (no sections)"
+    parts = [
+        f"{name}{SECTION_STRIP_SYMBOLS.get(state, '?')}"
+        for name, state in statuses.items()
+    ]
+    return f"{active_module}: {' '.join(parts)}"
+
+
+def hard_gaps_by_section(
+    session: dict[str, Any], atoms: list[dict[str, Any]], module: str | None = None
+) -> dict[str, list[str]]:
+    active_module = module or session["position"]["module"]
+    answered = effective_answered_atoms(session, atoms)
+    index = atom_by_id(atoms)
+    ready = set(ready_atoms(session, atoms))
+    gaps: dict[str, list[str]] = {}
+    for atom_id in ready:
+        atom = index[atom_id]
+        if atom.get("soft"):
+            continue
+        if atom_id in answered:
+            continue
+        section = atom.get("section", "Other")
+        gaps.setdefault(section, []).append(atom_id)
+    return gaps
+
+
+def soft_gaps_by_section(
+    session: dict[str, Any], atoms: list[dict[str, Any]], module: str | None = None
+) -> dict[str, list[str]]:
+    active_module = module or session["position"]["module"]
+    answered = effective_answered_atoms(session, atoms)
+    index = atom_by_id(atoms)
+    ready = set(ready_atoms(session, atoms))
+    gaps: dict[str, list[str]] = {}
+    for atom_id in ready:
+        atom = index[atom_id]
+        if not atom.get("soft"):
+            continue
+        if atom_id in answered:
+            continue
+        section = atom.get("section", "Other")
+        gaps.setdefault(section, []).append(atom_id)
+    return gaps
+
+
+def set_position_to_focus(session: dict[str, Any], atoms: list[dict[str, Any]]) -> None:
+    focus = pick_focus_atom(session, atoms)
+    if focus is None:
+        session["position"]["status"] = "completed"
+        return
+    session["position"] = {
+        "module": focus["module"],
+        "atom_id": focus["id"],
+        "status": "in_progress",
+    }
+
+
 def next_unsatisfied_atom(
     session: dict[str, Any], atoms: list[dict[str, Any]]
 ) -> dict[str, Any] | None:
-    answered = effective_answered_atoms(session, atoms)
-    for atom in atoms:
-        if atom["id"] in answered:
-            continue
-        if module_bypassed(session, atom["module"]):
-            continue
-        return atom
-    return None
+    return schedule_next_atom(session, atoms)
 
 
 def atom_module(atom_id: str) -> str:
@@ -532,22 +760,8 @@ def all_modules_ready(session: dict[str, Any]) -> bool:
 
 
 def advance_after_gate_milestone(session: dict[str, Any], module: str) -> None:
-    _build_atom_indexes()
     atoms = load_atoms()
-    index = atom_by_id(atoms)
-    gate_atom_id = gate_atom_for_module(module)
-    gate_atom = index[gate_atom_id]
-    next_atom = gate_atom.get("unlocks")
-    if next_atom:
-        session["position"] = {
-            "module": atom_module(next_atom),
-            "atom_id": next_atom,
-            "status": "in_progress",
-        }
-    else:
-        session["position"]["module"] = module
-        session["position"]["atom_id"] = gate_atom_id
-        session["position"]["status"] = "completed"
+    set_position_to_focus(session, atoms)
 
 
 def position_from_records(payload: dict[str, Any]) -> dict[str, Any] | None:
@@ -599,11 +813,5 @@ def advance_position_after_accept(
         session["position"]["status"] = position_override["resulting_status"]
         return
 
-    next_atom = atom.get("unlocks")
-    if next_atom:
-        session["position"]["module"] = atom_module(next_atom)
-        session["position"]["atom_id"] = next_atom
-        session["position"]["status"] = "in_progress"
-        return
-
-    session["position"]["status"] = "completed"
+    atoms = load_atoms()
+    set_position_to_focus(session, atoms)
