@@ -18,7 +18,6 @@ MODULE_PHASE = {
     "business-model": "Evolve",
     "experiments": "Test",
 }
-GATE_ATOMS = {"P12": "profile", "V08": "value-map", "B08": "business-model", "E10": "experiments"}
 GATE_ARTIFACTS = {
     "profile": "customer-profile.md",
     "value-map": "value-map.md",
@@ -36,16 +35,17 @@ DESIGN_BRIEFS = (
     ("ux-brief.template.md", "ux-brief.md"),
     ("app-design-brief.template.md", "app-design-brief.md"),
 )
-PROFILE_ATOMS = tuple(f"P{n:02d}" for n in range(1, 13))
-VALUE_MAP_ATOMS = tuple(f"V{n:02d}" for n in range(1, 9))
-BUSINESS_MODEL_ATOMS = tuple(f"B{n:02d}" for n in range(1, 9))
-EXPERIMENT_ATOMS = tuple(f"E{n:02d}" for n in range(1, 11))
-MODULE_ATOMS = {
-    "profile": PROFILE_ATOMS,
-    "value-map": VALUE_MAP_ATOMS,
-    "business-model": BUSINESS_MODEL_ATOMS,
-    "experiments": EXPERIMENT_ATOMS,
+CANONICAL_GATE_PASS = {
+    "profile": "pass profile gate",
+    "value-map": "pass value-map gate",
+    "business-model": "pass business-model gate",
+    "experiments": "pass experiments gate",
 }
+
+_atom_indexes_built = False
+GATE_ATOMS: dict[str, str] = {}
+MODULE_ATOMS: dict[str, tuple[str, ...]] = {}
+ATOM_MODULE_BY_ID: dict[str, str] = {}
 
 
 def utc_now_iso() -> str:
@@ -61,8 +61,28 @@ def load_atoms() -> list[dict[str, Any]]:
     return payload["atoms"]
 
 
-def load_kb() -> dict[str, Any]:
-    return load_json(ASSETS_DIR / "knowledge-base.json")
+def load_section_map() -> dict[str, Any]:
+    return load_json(ASSETS_DIR / "section-map.json")
+
+
+def _build_atom_indexes() -> None:
+    global _atom_indexes_built, GATE_ATOMS, MODULE_ATOMS, ATOM_MODULE_BY_ID
+    if _atom_indexes_built:
+        return
+    module_atoms: dict[str, list[str]] = {module: [] for module in MODULE_ORDER}
+    gate_atoms: dict[str, str] = {}
+    atom_module_by_id: dict[str, str] = {}
+    for atom in load_atoms():
+        atom_id = atom["id"]
+        module = atom["module"]
+        module_atoms[module].append(atom_id)
+        atom_module_by_id[atom_id] = module
+        if atom.get("gate"):
+            gate_atoms[atom_id] = module
+    GATE_ATOMS = gate_atoms
+    MODULE_ATOMS = {module: tuple(ids) for module, ids in module_atoms.items()}
+    ATOM_MODULE_BY_ID = atom_module_by_id
+    _atom_indexes_built = True
 
 
 def atom_by_id(atoms: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
@@ -79,6 +99,7 @@ def save_session(path: Path, session: dict[str, Any]) -> None:
 
 
 def default_session(slug: str, name: str) -> dict[str, Any]:
+    _build_atom_indexes()
     timestamp = utc_now_iso()
     session = {
         "schema_version": "1.0",
@@ -125,6 +146,59 @@ def latest_decision(session: dict[str, Any]) -> dict[str, Any] | None:
     return decisions[-1]
 
 
+def gate_atom_for_module(module: str) -> str:
+    _build_atom_indexes()
+    for atom_id, atom_module in GATE_ATOMS.items():
+        if atom_module == module:
+            return atom_id
+    raise KeyError(f"No gate atom for module {module!r}")
+
+
+def canonical_gate_pass_text(module: str) -> str:
+    return CANONICAL_GATE_PASS[module]
+
+
+def is_canonical_bypass_decision(text: str) -> bool:
+    lowered = text.lower().strip()
+    return "bypass" in lowered and " gate" in lowered
+
+
+def records_allow_off_position(records_payload: dict[str, Any] | None) -> bool:
+    if not records_payload:
+        return False
+    for decision in records_payload.get("decisions", []):
+        if is_canonical_bypass_decision(decision.get("decision", "")):
+            return True
+    return False
+
+
+def off_position_accept_hint(active_atom_id: str) -> str:
+    return (
+        f"Off-position accept for active atom {active_atom_id}: "
+        "use --reopen --conflict-note to revisit a prior atom, or pass "
+        "--records with a bypass <module> gate decision (or resulting position) "
+        "before accepting a different atom."
+    )
+
+
+def can_accept_atom(
+    session: dict[str, Any],
+    atom_id: str,
+    *,
+    reopen: bool,
+    stay: bool,
+    records_payload: dict[str, Any] | None,
+) -> tuple[bool, str | None]:
+    active_atom_id = session["position"]["atom_id"]
+    if atom_id == active_atom_id:
+        return True, None
+    if reopen or stay:
+        return True, None
+    if records_allow_off_position(records_payload):
+        return True, None
+    return False, off_position_accept_hint(active_atom_id)
+
+
 def module_bypassed(session: dict[str, Any], module: str) -> bool:
     needle = f"bypass {module} gate"
     for decision in reversed(session.get("decisions", [])):
@@ -134,13 +208,15 @@ def module_bypassed(session: dict[str, Any], module: str) -> bool:
 
 
 def module_gate_passed(session: dict[str, Any], module: str) -> bool:
-    gate_atom = next(key for key, value in GATE_ATOMS.items() if value == module)
+    _build_atom_indexes()
+    gate_atom = gate_atom_for_module(module)
+    canonical = canonical_gate_pass_text(module)
     for decision in reversed(session.get("decisions", [])):
-        text = decision.get("decision", "").lower()
-        if decision.get("source_atom") == gate_atom and "pass" in text and module in text:
-            return True
+        text = decision.get("decision", "").lower().strip()
         if f"bypass {module} gate" in text:
             return False
+        if decision.get("source_atom") == gate_atom and text == canonical:
+            return True
     return False
 
 
@@ -163,6 +239,7 @@ def module_outcome(session: dict[str, Any], module: str) -> str:
 
 
 def effective_answered_atoms(session: dict[str, Any], atoms: list[dict[str, Any]]) -> set[str]:
+    _build_atom_indexes()
     answered = answered_atom_ids(session)
     for module in MODULE_ORDER:
         if module_outcome(session, module) != "bypassed":
@@ -252,18 +329,19 @@ def next_unsatisfied_atom(
     session: dict[str, Any], atoms: list[dict[str, Any]]
 ) -> dict[str, Any] | None:
     answered = effective_answered_atoms(session, atoms)
-    index = atom_by_id(atoms)
-    position = session["position"]
-    current = index.get(position["atom_id"])
-    if current and position["atom_id"] not in answered:
-        return current
     for atom in atoms:
-        if atom["id"] not in answered:
-            return atom
+        if atom["id"] in answered:
+            continue
+        if module_bypassed(session, atom["module"]):
+            continue
+        return atom
     return None
 
 
 def atom_module(atom_id: str) -> str:
+    _build_atom_indexes()
+    if atom_id in ATOM_MODULE_BY_ID:
+        return ATOM_MODULE_BY_ID[atom_id]
     if atom_id.startswith("P"):
         return "profile"
     if atom_id.startswith("V"):
@@ -274,10 +352,9 @@ def atom_module(atom_id: str) -> str:
 
 
 def upsert_artifact(session: dict[str, Any], path: str, status: str) -> None:
-    for record in session["artifacts"]:
-        if record["path"] == path:
-            record["status"] = status
-            return
+    session["artifacts"] = [
+        record for record in session.get("artifacts", []) if record["path"] != path
+    ]
     session["artifacts"].append({"path": path, "status": status})
 
 
@@ -335,6 +412,7 @@ def append_session_records(
 
 
 def answers_for_module(session: dict[str, Any], module: str) -> list[dict[str, Any]]:
+    _build_atom_indexes()
     module_atoms = set(MODULE_ATOMS[module])
     latest: dict[str, dict[str, Any]] = {}
     for record in session.get("answers", []):
@@ -354,6 +432,15 @@ def format_answer_block(records: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
+def format_answer_block_for_atoms(session: dict[str, Any], atom_ids: list[str]) -> str:
+    records = [
+        current_answer(session, atom_id)
+        for atom_id in atom_ids
+        if current_answer(session, atom_id)
+    ]
+    return format_answer_block(records)
+
+
 def fill_section(template: str, heading: str, body: str) -> str:
     pattern = rf"(## {re.escape(heading)}\n)(.*?)(?=\n## |\Z)"
     replacement = f"\\1\n{body.strip()}\n\n"
@@ -365,52 +452,14 @@ def fill_section(template: str, heading: str, body: str) -> str:
 def fill_milestone_template(session: dict[str, Any], module: str) -> str:
     template_name = MILESTONE_TEMPLATES[module]
     template = (ASSETS_DIR / template_name).read_text(encoding="utf-8")
-    records = answers_for_module(session, module)
-    block = format_answer_block(records)
-    section_map = {
-        "profile": {
-            "Segment": block,
-            "Situation": block,
-            "Jobs": block,
-            "Pains": block,
-            "Gains": block,
-            "Alternatives": block,
-            "Evidence": block,
-            "Unknowns": format_unknowns(session),
-        },
-        "value-map": {
-            "Offering": block,
-            "Pain relievers": block,
-            "Gain creators": block,
-            "Fit links": block,
-            "Orphan candidates": block,
-            "Decisions": format_decisions(session, module),
-        },
-        "business-model": {
-            "Delivery": block,
-            "Relationships": block,
-            "Revenue": block,
-            "Activities": block,
-            "Resources": block,
-            "Partners": block,
-            "Costs": block,
-            "Scale": block,
-            "Defensibility": block,
-            "Unknowns": format_unknowns(session),
-        },
-        "experiments": {
-            "Hypothesis": block,
-            "Criticality": block,
-            "Evidence status": block,
-            "Method": block,
-            "Metric": block,
-            "Threshold": block,
-            "Result": block,
-            "Learning": block,
-            "Decision": block,
-        },
-    }
-    for heading, body in section_map.get(module, {}).items():
+    section_map = load_section_map()["milestones"].get(module, {})
+    for heading, atom_ids in section_map.items():
+        if heading == "Unknowns":
+            body = format_unknowns(session)
+        elif heading == "Decisions":
+            body = format_decisions(session, module)
+        else:
+            body = format_answer_block_for_atoms(session, atom_ids)
         template = fill_section(template, heading, body)
     return template.rstrip() + "\n"
 
@@ -439,13 +488,7 @@ def format_decisions(session: dict[str, Any], module: str) -> str:
 
 def fill_design_brief(session: dict[str, Any], template_name: str) -> str:
     template = (ASSETS_DIR / template_name).read_text(encoding="utf-8")
-    all_answers = format_answer_block(
-        [
-            current_answer(session, atom_id)
-            for atom_id in sorted(answered_atom_ids(session))
-            if current_answer(session, atom_id)
-        ]
-    )
+    section_map = load_section_map()["design_briefs"].get(template_name, {})
     assumptions = session.get("assumptions", [])
     assumption_block = (
         "\n".join(
@@ -454,45 +497,30 @@ def fill_design_brief(session: dict[str, Any], template_name: str) -> str:
         )
         or "unknown"
     )
-    section_defaults = {
-        "Product design brief": {
-            "Problem and target segment": all_answers,
-            "Validated job and desired outcome": all_answers,
-            "Evidence": all_answers,
-            "Proposed value and fit": all_answers,
-            "Capabilities implied by accepted state": all_answers,
-            "Constraints and business-model dependencies": all_answers,
-            "Hypotheses and excluded/parked scope": assumption_block,
-            "Acceptance signals": all_answers,
-        },
-        "UX brief": {
-            "User and situation": all_answers,
-            "Primary job and journey start": all_answers,
-            "Pains to reduce and gains to support": all_answers,
-            "Key user decisions": all_answers,
-            "Information and trust needs": all_answers,
-            "Required states": all_answers,
-            "Accessibility and content implications": "unknown",
-            "Evidence, assumptions, unknowns": assumption_block,
-            "Research and experiment hooks": all_answers,
-        },
-        "App design brief": {
-            "Capabilities from value map": all_answers,
-            "Primary flows from jobs and channels": all_answers,
-            "Entities and data from offering": all_answers,
-            "Non-goals from orphans and bypasses": assumption_block,
-            "Open assumptions from bombs": "\n".join(
-                f"- {item}" for item in unvalidated_bombs(session)
-            )
-            or "unknown",
-        },
-    }
     title = template.splitlines()[0].lstrip("# ").strip()
-    for heading, body in section_defaults.get(title, {}).items():
+    for heading, atom_ids in section_map.items():
+        if heading == "Hypotheses and excluded/parked scope":
+            body = assumption_block
+        elif heading == "Non-goals from orphans and bypasses":
+            body = assumption_block
+        elif heading == "Open assumptions from bombs":
+            body = (
+                "\n".join(f"- {item}" for item in unvalidated_bombs(session)) or "unknown"
+            )
+        elif heading == "Evidence, assumptions, unknowns":
+            body = assumption_block
+        elif heading == "Accessibility and content implications":
+            body = "unknown"
+        else:
+            body = format_answer_block_for_atoms(session, atom_ids)
         template = fill_section(template, heading, body)
         if heading == "Required states":
             for sub in ("Empty", "Loading", "Success", "Error", "Recovery"):
                 template = fill_section(template, sub, "unknown")
+    if title == "Product design brief":
+        for heading in ("Moat and unknown scores", "Excluded scope"):
+            if heading not in section_map:
+                template = fill_section(template, heading, assumption_block)
     return template.rstrip() + "\n"
 
 
@@ -501,3 +529,81 @@ def all_modules_ready(session: dict[str, Any]) -> bool:
         module_outcome(session, module) in {"completed", "bypassed"}
         for module in MODULE_ORDER
     )
+
+
+def advance_after_gate_milestone(session: dict[str, Any], module: str) -> None:
+    _build_atom_indexes()
+    atoms = load_atoms()
+    index = atom_by_id(atoms)
+    gate_atom_id = gate_atom_for_module(module)
+    gate_atom = index[gate_atom_id]
+    next_atom = gate_atom.get("unlocks")
+    if next_atom:
+        session["position"] = {
+            "module": atom_module(next_atom),
+            "atom_id": next_atom,
+            "status": "in_progress",
+        }
+    else:
+        session["position"]["module"] = module
+        session["position"]["atom_id"] = gate_atom_id
+        session["position"]["status"] = "completed"
+
+
+def position_from_records(payload: dict[str, Any]) -> dict[str, Any] | None:
+    decisions = payload.get("decisions", [])
+    if not decisions:
+        return None
+    last = decisions[-1]
+    required = ("resulting_module", "resulting_atom", "resulting_status")
+    if all(field in last for field in required):
+        return last
+    return None
+
+
+def advance_position_after_accept(
+    session: dict[str, Any],
+    atom: dict[str, Any],
+    atom_id: str,
+    *,
+    reopen: bool,
+    stay: bool,
+    gate_pending: bool,
+    next_atom_override: str,
+    records_payload: dict[str, Any] | None,
+) -> None:
+    _build_atom_indexes()
+    if stay:
+        session["position"]["module"] = atom["module"]
+        session["position"]["atom_id"] = atom_id
+        session["position"]["status"] = "in_progress"
+        return
+
+    position_override = position_from_records(records_payload) if records_payload else None
+    if atom_id in GATE_ATOMS and not reopen:
+        session["position"]["module"] = atom["module"]
+        session["position"]["atom_id"] = atom_id
+        session["position"]["status"] = "gate_pending"
+        upsert_artifact(session, GATE_ARTIFACTS[atom["module"]], "pending")
+        return
+
+    if next_atom_override:
+        session["position"]["module"] = atom_module(next_atom_override)
+        session["position"]["atom_id"] = next_atom_override
+        session["position"]["status"] = "in_progress"
+        return
+
+    if position_override is not None:
+        session["position"]["module"] = position_override["resulting_module"]
+        session["position"]["atom_id"] = position_override["resulting_atom"]
+        session["position"]["status"] = position_override["resulting_status"]
+        return
+
+    next_atom = atom.get("unlocks")
+    if next_atom:
+        session["position"]["module"] = atom_module(next_atom)
+        session["position"]["atom_id"] = next_atom
+        session["position"]["status"] = "in_progress"
+        return
+
+    session["position"]["status"] = "completed"

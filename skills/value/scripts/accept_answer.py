@@ -9,16 +9,14 @@ import sys
 from pathlib import Path
 
 from _session import (
-    GATE_ARTIFACTS,
-    GATE_ATOMS,
+    advance_position_after_accept,
     append_session_records,
     atom_by_id,
-    atom_module,
+    can_accept_atom,
     load_atoms,
     load_session,
     recompute_ledger,
     save_session,
-    upsert_artifact,
     utc_now_iso,
 )
 
@@ -28,17 +26,6 @@ def load_records(path: Path) -> dict:
     if not isinstance(payload, dict):
         raise ValueError("--records file must contain a JSON object")
     return payload
-
-
-def position_from_records(payload: dict) -> dict | None:
-    decisions = payload.get("decisions", [])
-    if not decisions:
-        return None
-    last = decisions[-1]
-    required = ("resulting_module", "resulting_atom", "resulting_status")
-    if all(field in last for field in required):
-        return last
-    return None
 
 
 def main() -> int:
@@ -97,6 +84,28 @@ def main() -> int:
         print(f"Unknown atom: {args.atom_id}", file=sys.stderr)
         return 1
 
+    records_payload: dict | None = None
+    if args.records is not None:
+        if not args.records.is_file():
+            print(f"Missing records file: {args.records}", file=sys.stderr)
+            return 1
+        try:
+            records_payload = load_records(args.records)
+        except ValueError as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
+
+    allowed, hint = can_accept_atom(
+        session,
+        args.atom_id,
+        reopen=args.reopen,
+        stay=args.stay,
+        records_payload=records_payload,
+    )
+    if not allowed:
+        print(hint, file=sys.stderr)
+        return 1
+
     existing = [
         record
         for record in session.get("answers", [])
@@ -125,13 +134,8 @@ def main() -> int:
     session["answers"].append(record)
     session["project"]["updated_at"] = accepted_at
 
-    records_payload: dict | None = None
-    if args.records is not None:
-        if not args.records.is_file():
-            print(f"Missing records file: {args.records}", file=sys.stderr)
-            return 1
+    if records_payload is not None:
         try:
-            records_payload = load_records(args.records)
             append_session_records(
                 session,
                 records_payload,
@@ -141,34 +145,16 @@ def main() -> int:
             print(str(exc), file=sys.stderr)
             return 1
 
-    if args.stay:
-        session["position"]["module"] = atom["module"]
-        session["position"]["atom_id"] = args.atom_id
-        session["position"]["status"] = "in_progress"
-    else:
-        next_atom = args.next_atom or atom.get("unlocks")
-        position_override = (
-            position_from_records(records_payload) if records_payload else None
-        )
-        if args.gate_pending and args.atom_id in GATE_ATOMS:
-            session["position"]["module"] = atom["module"]
-            session["position"]["atom_id"] = args.atom_id
-            session["position"]["status"] = "gate_pending"
-            upsert_artifact(session, GATE_ARTIFACTS[atom["module"]], "pending")
-        elif args.next_atom:
-            session["position"]["module"] = atom_module(next_atom)
-            session["position"]["atom_id"] = next_atom
-            session["position"]["status"] = "in_progress"
-        elif position_override is not None:
-            session["position"]["module"] = position_override["resulting_module"]
-            session["position"]["atom_id"] = position_override["resulting_atom"]
-            session["position"]["status"] = position_override["resulting_status"]
-        elif next_atom:
-            session["position"]["module"] = atom_module(next_atom)
-            session["position"]["atom_id"] = next_atom
-            session["position"]["status"] = "in_progress"
-        else:
-            session["position"]["status"] = "completed"
+    advance_position_after_accept(
+        session,
+        atom,
+        args.atom_id,
+        reopen=args.reopen,
+        stay=args.stay,
+        gate_pending=args.gate_pending,
+        next_atom_override=args.next_atom,
+        records_payload=records_payload,
+    )
 
     session["ledger"] = recompute_ledger(session)
     save_session(args.session, session)

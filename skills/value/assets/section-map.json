@@ -1,0 +1,67 @@
+{
+  "milestones": {
+    "profile": {
+      "Segment": ["P01"],
+      "Situation": ["P02"],
+      "Jobs": ["P03", "P04", "P05", "P06", "P11"],
+      "Pains": ["P07"],
+      "Gains": ["P08"],
+      "Alternatives": ["P09"],
+      "Evidence": ["P10"]
+    },
+    "value-map": {
+      "Offering": ["V01", "V02"],
+      "Pain relievers": ["V03"],
+      "Gain creators": ["V04"],
+      "Fit links": ["V05"],
+      "Orphan candidates": ["V06"]
+    },
+    "business-model": {
+      "Delivery": ["B01"],
+      "Relationships": ["B02"],
+      "Revenue": ["B03"],
+      "Activities": ["B04"],
+      "Resources": ["B04"],
+      "Partners": ["B05"],
+      "Costs": ["B05"],
+      "Scale": ["B06"],
+      "Defensibility": ["B07"]
+    },
+    "experiments": {
+      "Hypothesis": ["E01", "E03"],
+      "Criticality": ["E02"],
+      "Evidence status": ["E02", "E06"],
+      "Method": ["E04"],
+      "Metric": ["E05"],
+      "Threshold": ["E05"],
+      "Result": ["E08"],
+      "Learning": ["E09"],
+      "Decision": ["E07", "E09", "E10"]
+    }
+  },
+  "design_briefs": {
+    "product-design-brief.template.md": {
+      "Problem and target segment": ["P01", "P02", "P03"],
+      "Validated job and desired outcome": ["P03", "P11"],
+      "Evidence": ["P10", "E08"],
+      "Proposed value and fit": ["V01", "V05", "V07"],
+      "Capabilities implied by accepted state": ["V02", "V03", "V04"],
+      "Constraints and business-model dependencies": ["B01", "B03", "B04", "B06"],
+      "Acceptance signals": ["E05", "E09"]
+    },
+    "ux-brief.template.md": {
+      "User and situation": ["P01", "P02"],
+      "Primary job and journey start": ["P03", "P02"],
+      "Pains to reduce and gains to support": ["P07", "P08"],
+      "Key user decisions": ["P01", "B02"],
+      "Information and trust needs": ["P10", "B02"],
+      "Required states": ["P02", "P03"],
+      "Research and experiment hooks": ["E04", "E05"]
+    },
+    "app-design-brief.template.md": {
+      "Capabilities from value map": ["V01", "V02"],
+      "Primary flows from jobs and channels": ["P03", "B01"],
+      "Entities and data from offering": ["V02", "V04"]
+    }
+  }
+}

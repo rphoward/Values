@@ -10,7 +10,7 @@ from pathlib import Path
 
 from _session import (
     GATE_ATOMS,
-    atom_by_id,
+    all_modules_ready,
     load_atoms,
     load_session,
     module_outcome,
@@ -30,10 +30,20 @@ def main() -> int:
 
     session = load_session(args.session)
     atoms = load_atoms()
-    index = atom_by_id(atoms)
+    if all_modules_ready(session):
+        print(json.dumps({"done": True, "message": "All modules completed or bypassed."}))
+        return 0
+
     atom = next_unsatisfied_atom(session, atoms)
     if atom is None:
-        print(json.dumps({"done": True, "message": "All atoms satisfied."}))
+        print(
+            json.dumps(
+                {
+                    "done": True,
+                    "message": "No unsatisfied atoms remain, but module gates are not all complete or bypassed.",
+                }
+            )
+        )
         return 0
 
     gate_due = atom["id"] in GATE_ATOMS and module_outcome(
