@@ -184,7 +184,8 @@
     (forbidden 'agent-hand-writes-session-json 're-ask-answered-atom-without-reopen 'autonomy-as-offering-without-reopen-V01))
 
   (section milestone-writes
-    (trigger "module gate_pending after final atom accepted")
+    (trigger "module gate_pending after gate atom accepted with --gate-pending, or --records resulting_status gate_pending")
+    (cli-hold "scripts/accept_answer.py requires --gate-pending to hold on a gate atom unless --records sets resulting_status gate_pending; either path upserts the module milestone artifact as pending")
     (source "accepted answers and labeled evidence for that module only")
     (brief-prerequisite "derive all four module outcomes from decisions and artifact statuses; each must be completed or bypassed")
     (product-brief "only from accepted facts, labeled inferences, decisions, unresolved assumptions")

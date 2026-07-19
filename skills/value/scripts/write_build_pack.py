@@ -10,10 +10,11 @@ from pathlib import Path
 from _session import (
     all_modules_ready,
     load_session,
+    plan_build_pack,
     recompute_ledger,
-    refresh_build_pack,
     save_session,
     utc_now_iso,
+    write_planned_files,
 )
 
 
@@ -41,10 +42,11 @@ def main() -> int:
         )
         return 1
 
-    written = refresh_build_pack(session, args.session.parent)
+    planned = plan_build_pack(session, args.session.parent)
     session["project"]["updated_at"] = utc_now_iso()
     session["ledger"] = recompute_ledger(session)
     save_session(args.session, session)
+    written = write_planned_files(planned)
     for path in written:
         print(f"Wrote {path}")
     return 0

@@ -10,15 +10,17 @@ from pathlib import Path
 from _session import (
     GATE_ARTIFACTS,
     advance_after_gate_milestone,
+    artifact_status,
     fill_milestone_template,
     load_session,
     module_gate_passed,
     module_outcome,
+    plan_build_pack,
     recompute_ledger,
-    refresh_build_pack,
     save_session,
     upsert_artifact,
     utc_now_iso,
+    write_planned_files,
 )
 
 
@@ -44,7 +46,14 @@ def main() -> int:
 
     session = load_session(args.session)
     position = session["position"]
-    if not args.force:
+    artifact_name = GATE_ARTIFACTS[args.module]
+    output_path = args.session.parent / artifact_name
+    recovering_missing_file = (
+        module_gate_passed(session, args.module)
+        and artifact_status(session, artifact_name) == "final"
+        and not output_path.is_file()
+    )
+    if not args.force and not recovering_missing_file:
         if position["module"] != args.module or position["status"] != "gate_pending":
             print(
                 f"Module {args.module!r} is not gate_pending "
@@ -60,18 +69,18 @@ def main() -> int:
             )
             return 1
 
-    artifact_name = GATE_ARTIFACTS[args.module]
-    output_path = args.session.parent / artifact_name
     content = fill_milestone_template(session, args.module)
-    output_path.write_text(content, encoding="utf-8")
     upsert_artifact(session, artifact_name, "final")
     session["project"]["updated_at"] = utc_now_iso()
-    advance_after_gate_milestone(session, args.module)
-    # Gate exit also refreshes IDE memory files (including north-star blurb).
-    for path in refresh_build_pack(session, args.session.parent):
-        print(f"Wrote {path}")
+    if not recovering_missing_file:
+        advance_after_gate_milestone(session, args.module)
+    # Commit session before disk exports so a crash cannot leave
+    # gate_pending with "final" files already written.
+    planned = [(output_path, content), *plan_build_pack(session, args.session.parent)]
     session["ledger"] = recompute_ledger(session)
     save_session(args.session, session)
+    for path in write_planned_files(planned):
+        print(f"Wrote {path}")
     print(f"Wrote {output_path} (module outcome={module_outcome(session, args.module)})")
     return 0
 
