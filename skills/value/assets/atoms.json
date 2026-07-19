@@ -185,7 +185,7 @@
     {
       "id": "V03",
       "module": "value-map",
-      "asks": "How does each relevant part of the offering reduce a specific accepted customer pain?",
+      "asks": "Using the match board of offering parts and accepted pains, how does each relevant part reduce a specific pain?",
       "accepts_summary": "Links relief to included item and accepted pain; labels unsupported effects hypothesis.",
       "unlocks": "V04",
       "gate": false,
@@ -199,7 +199,7 @@
     {
       "id": "V04",
       "module": "value-map",
-      "asks": "How does each relevant part of the offering create a specific accepted customer gain?",
+      "asks": "Using the match board of offering parts and accepted gains, how does each relevant part create a specific gain?",
       "accepts_summary": "Links effect to included item and accepted gain; labels unsupported effects hypothesis.",
       "unlocks": "V05",
       "gate": false,

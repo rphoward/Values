@@ -142,6 +142,7 @@
       ui-copy.md
       states-and-flows.md
       first-value.md
+      north-star-blurb.md
       docs/adr/*.md))
 
   (section conflict-handling
@@ -175,10 +176,11 @@
     (bulk scripts/accept_bulk.py — validate draft-map JSON and append multiple answers)
     (map scripts/map_gaps.py — dry-run draft-map without writes)
     (pacing scripts/set_pacing_mode.py — set pacing_mode standard or express and recompute focus)
-    (milestone scripts/write_milestone.py — fill module template at gate_pending)
+    (milestone scripts/write_milestone.py — fill module template at gate_pending; also refreshes build pack including north-star-blurb.md)
     (briefs scripts/write_design_briefs.py — always writes product-design-brief.md, ux-brief.md, app-design-brief.md; skips bypass-ceremony answers as section content)
-    (build-pack scripts/write_build_pack.py — IDE exports: CONTEXT.product.md, AGENTS.product.md, ui-copy.md, states-and-flows.md, first-value.md, docs/adr/ for hard decisions; lenses in references/export-lenses.md)
-    (forbidden 'agent-hand-writes-session-json 're-ask-answered-atom-without-reopen))
+    (build-pack scripts/write_build_pack.py — IDE exports: CONTEXT.product.md, AGENTS.product.md, ui-copy.md, states-and-flows.md, first-value.md, north-star-blurb.md, docs/adr/ for hard decisions; lenses in references/export-lenses.md)
+    (next-match-board "when focus is V03 or V04, next_question.py adds agent-internal match_board and match_prompt; never quote raw JSON to the user")
+    (forbidden 'agent-hand-writes-session-json 're-ask-answered-atom-without-reopen 'autonomy-as-offering-without-reopen-V01))
 
   (section milestone-writes
     (trigger "module gate_pending after final atom accepted")

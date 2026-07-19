@@ -41,7 +41,18 @@ BUILD_PACK_FILES = (
     ("ui-copy.template.md", "ui-copy.md"),
     ("states-and-flows.template.md", "states-and-flows.md"),
     ("first-value.template.md", "first-value.md"),
+    ("north-star-blurb.template.md", "north-star-blurb.md"),
 )
+MATCH_BOARD_ATOMS = {
+    "V03": ("P07", "pains", "Which offering part reduces which pain, and how?"),
+    "V04": ("P08", "gains", "Which offering part creates which gain, and how?"),
+}
+_NUMBERED_ITEM_RE = re.compile(r"\((\d+)\)\s*")
+_LINE_ITEM_RE = re.compile(
+    r"(?:^|\n)\s*(?:[-*•]|\(?\d+[\)\].:])\s+",
+    flags=re.MULTILINE,
+)
+_EXTREME_PAIN_RE = re.compile(r"\b(extreme|severe)\b", flags=re.IGNORECASE)
 HARD_DECISION_MARKERS = (
     "bypass",
     "orphan",
@@ -818,6 +829,132 @@ def format_answer_block(records: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
+def sticky_label(text: str, max_words: int = 10) -> str:
+    """Short sticky-note summary for voice rendering (aim ≤10 words)."""
+    cleaned = re.sub(r"\s+", " ", text).strip()
+    cleaned = re.sub(r"^[\(\[]?\d+[\)\].:]?\s*", "", cleaned)
+    cleaned = re.sub(r"^[-*•]\s*", "", cleaned)
+    cleaned = re.sub(
+        r"^\((?:extreme|severe|expected|desired|unexpected)[^)]*\)\s*",
+        "",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    words = cleaned.split()
+    if len(words) <= max_words:
+        return cleaned
+    return " ".join(words[:max_words])
+
+
+def split_sticky_items(text: str) -> list[str]:
+    """Split an answer into sticky items; fall back to one block."""
+    raw = text.strip()
+    if not raw:
+        return []
+
+    numbered = [part.strip(" ;.") for part in _NUMBERED_ITEM_RE.split(raw) if part.strip(" ;.")]
+    # split leaves the captured digits as separate parts — drop pure digits
+    numbered_items = [part for part in numbered if not part.isdigit()]
+    if len(numbered_items) >= 2:
+        if len(numbered_items[0].split()) <= 4 and not re.search(
+            r"\b(pain|gain|product|service|include)\b",
+            numbered_items[0],
+            flags=re.IGNORECASE,
+        ):
+            numbered_items = numbered_items[1:] or numbered_items
+        return numbered_items
+
+    line_parts = [part.strip(" ;.") for part in _LINE_ITEM_RE.split(raw) if part.strip(" ;.")]
+    if len(line_parts) >= 2:
+        if len(line_parts[0].split()) <= 4:
+            line_parts = line_parts[1:] or line_parts
+        return line_parts
+
+    semi = [part.strip() for part in raw.split(";") if part.strip()]
+    if len(semi) >= 2:
+        return semi
+    return [raw]
+
+
+def _prefer_extreme_first(items: list[str]) -> list[str]:
+    extreme = [item for item in items if _EXTREME_PAIN_RE.search(item)]
+    rest = [item for item in items if not _EXTREME_PAIN_RE.search(item)]
+    return extreme + rest if extreme else items
+
+
+def match_board_for_atom(session: dict[str, Any], atom_id: str) -> dict[str, Any] | None:
+    """Agent-internal parts×pains/gains board for V03/V04 voice rendering."""
+    if atom_id not in MATCH_BOARD_ATOMS:
+        return None
+    target_atom, target_name, link_question = MATCH_BOARD_ATOMS[atom_id]
+    parts_record = current_answer(session, "V02")
+    targets_record = current_answer(session, target_atom)
+    parts = (
+        split_sticky_items(parts_record["answer"])
+        if parts_record and not is_ceremony_answer(parts_record)
+        else []
+    )
+    targets = (
+        split_sticky_items(targets_record["answer"])
+        if targets_record and not is_ceremony_answer(targets_record)
+        else []
+    )
+    if atom_id == "V03":
+        targets = _prefer_extreme_first(targets)
+    part_labels = [sticky_label(item) for item in parts]
+    target_labels = [sticky_label(item) for item in targets]
+    parts_list = "\n".join(f"- {label}" for label in part_labels) or "- (no offering parts yet)"
+    targets_list = (
+        "\n".join(f"- {label}" for label in target_labels)
+        or f"- (no accepted {target_name} yet)"
+    )
+    match_prompt = (
+        f"Offering parts:\n{parts_list}\n\n"
+        f"Accepted {target_name}:\n{targets_list}\n\n"
+        f"{link_question}"
+    )
+    return {
+        "parts": parts,
+        "targets": targets,
+        "part_labels": part_labels,
+        "target_labels": target_labels,
+        "target_atom": target_atom,
+        "target_name": target_name,
+        "match_prompt": match_prompt,
+    }
+
+
+def answer_text(session: dict[str, Any], atom_id: str) -> str:
+    record = current_answer(session, atom_id)
+    if record is None or is_ceremony_answer(record):
+        return ""
+    return record["answer"].strip()
+
+
+def fill_north_star_blurb(session: dict[str, Any]) -> str:
+    """One early paste-ready north-star paragraph (distinct from V08 three ad-libs)."""
+    template = (ASSETS_DIR / "north-star-blurb.template.md").read_text(encoding="utf-8")
+    project_name = session.get("project", {}).get("name", "Project")
+    segment = answer_text(session, "P01")
+    job = answer_text(session, "P11") or answer_text(session, "P03")
+    why = answer_text(session, "P07") or answer_text(session, "P08")
+    who_bit = sticky_label(segment, max_words=16) if segment else "this customer"
+    job_bit = sticky_label(job, max_words=14) if job else "make progress that matters"
+    if why:
+        why_bit = sticky_label(why, max_words=16)
+        paragraph = (
+            f"For {who_bit}: help them {job_bit} — because {why_bit}."
+        )
+    else:
+        paragraph = f"For {who_bit}: help them {job_bit}."
+    install = "npx skills add rphoward/Values"
+    return (
+        template.replace("PROJECT_NAME", project_name)
+        .replace("NORTH_STAR_PARAGRAPH", paragraph)
+        .replace("NORTH_STAR_INSTALL", install)
+    )
+
+
 def format_answer_block_for_atoms(session: dict[str, Any], atom_ids: list[str]) -> str:
     records = []
     for atom_id in atom_ids:
@@ -979,6 +1116,9 @@ def write_hard_decision_adrs(session: dict[str, Any], session_dir: Path) -> list
 
 
 def fill_build_pack_file(session: dict[str, Any], template_name: str) -> str:
+    if template_name == "north-star-blurb.template.md":
+        return fill_north_star_blurb(session)
+
     template = (ASSETS_DIR / template_name).read_text(encoding="utf-8")
     section_map = load_section_map().get("ide_exports", {}).get(template_name, {})
     project_name = session.get("project", {}).get("name", "Project")
@@ -1028,6 +1168,22 @@ def fill_build_pack_file(session: dict[str, Any], template_name: str) -> str:
             template = fill_section(template, heading, body)
 
     return template.rstrip() + "\n"
+
+
+def refresh_build_pack(session: dict[str, Any], session_dir: Path) -> list[Path]:
+    """Write IDE export pack files (including north-star blurb) and hard-decision ADRs."""
+    written: list[Path] = []
+    for template_name, output_name in BUILD_PACK_FILES:
+        output_path = session_dir / output_name
+        content = fill_build_pack_file(session, template_name)
+        output_path.write_text(content, encoding="utf-8")
+        upsert_artifact(session, output_name, "final")
+        written.append(output_path)
+    for adr_path in write_hard_decision_adrs(session, session_dir):
+        rel = adr_path.relative_to(session_dir).as_posix()
+        upsert_artifact(session, rel, "final")
+        written.append(adr_path)
+    return written
 
 
 def all_modules_ready(session: dict[str, Any]) -> bool:

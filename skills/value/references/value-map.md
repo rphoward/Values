@@ -10,7 +10,7 @@
   (atom
     (id V01)
     (name "offering boundary")
-    (teaches "A value map covers one offering for the accepted segment and priority job. Choosing that scope is a decision; a user-supported description keeps its original evidence kind rather than being upgraded to fact.")
+    (teaches "A value map covers one offering for the accepted segment and priority job. Profile needs are not the offering — including autonomy ranked in the profile — the map is the thing in the box aimed outward. Choosing that scope is a decision; a user-supported description keeps its original evidence kind rather than being upgraded to fact.")
     (asks "Which single offering are we mapping?")
     (accepts "Names one offering and at least one boundary exclusion; labels an explicit scope choice decision and preserves another user-supported kind, while an unresolved boundary creates a blocking unknown and keeps V01 active.")
     (writes "append answers record {atom_id V01, answer accepted text, kind decision for an explicit scope choice or the accepted supported kind, accepted_at current RFC 3339 timestamp}; when boundary is accepted append decisions record {decision accepted offering boundary, reason accepted scope reason, source_atom V01, resulting_module value-map, resulting_atom V02, resulting_status in_progress}; when boundary is unresolved append unknowns record {question offering boundary not established, blocking true}; set project.updated_at to accepted_at; when boundary is unresolved keep position.module value-map, position.atom_id V01, position.status in_progress; when boundary is accepted set position.module value-map, position.atom_id V02, position.status in_progress")
@@ -29,8 +29,8 @@
   (atom
     (id V03)
     (name "pain relievers")
-    (teaches "A pain reliever states how an included item reduces a specific accepted pain. It follows the offering list so relief claims can be traced to something the offering actually does.")
-    (asks "How does each relevant part of the offering reduce a specific accepted customer pain?")
+    (teaches "A pain reliever states how an included item reduces a specific accepted pain. The match board shows offering parts beside accepted pains so each relief claim can be traced; prefer extreme pains when severity is labeled.")
+    (asks "Using the match board of offering parts and accepted pains, how does each relevant part reduce a specific pain?")
     (accepts "Links each proposed relief to an included item and an accepted pain, states the expected reduction, and labels unsupported effects as hypotheses.")
     (writes "append answers record {atom_id V03, answer accepted text, kind hypothesis, accepted_at current RFC 3339 timestamp}; append assumptions record {claim proposed pain relief, criticality high, evidence_status unsupported or partial, source_atom V03}; set project.updated_at to accepted_at; set position.module value-map, position.atom_id V04, position.status in_progress")
     (unlocks V04))
@@ -38,8 +38,8 @@
   (atom
     (id V04)
     (name "gain creators")
-    (teaches "A gain creator states how the offering produces an accepted essential, expected, desired, or unexpected outcome. Separating creation from pain relief prevents the same claim from doing double duty without evidence.")
-    (asks "How does each relevant part of the offering create a specific accepted customer gain?")
+    (teaches "A gain creator states how the offering produces an accepted essential, expected, desired, or unexpected outcome. The match board shows offering parts beside accepted gains so creation claims stay separate from pain relief.")
+    (asks "Using the match board of offering parts and accepted gains, how does each relevant part create a specific gain?")
     (accepts "Links each proposed effect to an included item and accepted gain, states the expected outcome, and labels unsupported effects as hypotheses.")
     (writes "append answers record {atom_id V04, answer accepted text, kind hypothesis, accepted_at current RFC 3339 timestamp}; append assumptions record {claim proposed gain creation, criticality medium, evidence_status unsupported or partial, source_atom V04}; set project.updated_at to accepted_at; set position.module value-map, position.atom_id V05, position.status in_progress")
     (unlocks V05))

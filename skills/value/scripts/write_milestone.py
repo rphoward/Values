@@ -15,6 +15,7 @@ from _session import (
     module_gate_passed,
     module_outcome,
     recompute_ledger,
+    refresh_build_pack,
     save_session,
     upsert_artifact,
     utc_now_iso,
@@ -66,6 +67,9 @@ def main() -> int:
     upsert_artifact(session, artifact_name, "final")
     session["project"]["updated_at"] = utc_now_iso()
     advance_after_gate_milestone(session, args.module)
+    # Gate exit also refreshes IDE memory files (including north-star blurb).
+    for path in refresh_build_pack(session, args.session.parent):
+        print(f"Wrote {path}")
     session["ledger"] = recompute_ledger(session)
     save_session(args.session, session)
     print(f"Wrote {output_path} (module outcome={module_outcome(session, args.module)})")

@@ -8,15 +8,12 @@ import sys
 from pathlib import Path
 
 from _session import (
-    BUILD_PACK_FILES,
     all_modules_ready,
-    fill_build_pack_file,
     load_session,
     recompute_ledger,
+    refresh_build_pack,
     save_session,
-    upsert_artifact,
     utc_now_iso,
-    write_hard_decision_adrs,
 )
 
 
@@ -44,20 +41,7 @@ def main() -> int:
         )
         return 1
 
-    session_dir = args.session.parent
-    written: list[str] = []
-    for template_name, output_name in BUILD_PACK_FILES:
-        output_path = session_dir / output_name
-        content = fill_build_pack_file(session, template_name)
-        output_path.write_text(content, encoding="utf-8")
-        upsert_artifact(session, output_name, "final")
-        written.append(str(output_path))
-
-    for adr_path in write_hard_decision_adrs(session, session_dir):
-        rel = adr_path.relative_to(session_dir).as_posix()
-        upsert_artifact(session, rel, "final")
-        written.append(str(adr_path))
-
+    written = refresh_build_pack(session, args.session.parent)
     session["project"]["updated_at"] = utc_now_iso()
     session["ledger"] = recompute_ledger(session)
     save_session(args.session, session)

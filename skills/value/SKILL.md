@@ -30,6 +30,7 @@ metadata:
       (ui-copy-template assets/ui-copy.template.md)
       (states-and-flows-template assets/states-and-flows.template.md)
       (first-value-template assets/first-value.template.md)
+      (north-star-blurb-template assets/north-star-blurb.template.md)
       (customer-profile-template assets/customer-profile.template.md)
       (value-map-template assets/value-map.template.md)
       (business-model-template assets/business-model.template.md)
@@ -96,6 +97,7 @@ metadata:
       (known "phrase from the last accepted answer or satisfied section — e.g. segment locked, job stated")
       (edge "what is missing now and why it matters for the next design move — curiosity, not taxonomy labels")
       (question "rephrase asks from scripts/next_question.py JSON; never paste JSON, accepts_summary, or atom IDs unless user asks what counts as an answer")
+      (match-board "when next_question JSON includes match_board: render part_labels and target_labels as two plain dash lists (no tables), prefer extreme pains when labeled, then ask the one link question from match_prompt; never quote raw JSON")
       (forbidden-user-facing "Ledger:, atom=, P08, bombs=, ready_count, focus_atom, slug, path, section strip every turn")
       (progress-strip "scripts/status.py --sections only on resume, when user asks where am I, or after a module gate — not every turn")
       (express "skip warm bridge; still one human question"))
@@ -104,7 +106,7 @@ metadata:
       (never "quote script stdout verbatim to the user"))
     (shape
       1 "run scripts/status.py --brief and scripts/next_question.py internally"
-      2 "compose voice-recipe paragraph for the user"
+      2 "compose voice-recipe paragraph for the user; on V03/V04 include sticky match lists then one link question"
       3 "micro-lesson only when user asks to teach, on first visit to a section, or at gate review — not every turn"
       4 "wait for the user's answer")
   (draft-map-gap-fill
@@ -118,9 +120,9 @@ metadata:
     (trigger "user invokes /value with a decision mid-repo — should I add X, who is this for")
     (flow
       1 "scripts/status.py --brief and --sections plus read session.json internally"
-      2 "identify minimum section needed; do not restart at P01 when segment is satisfied"
-      3 "ask one decision-framed question or offer draft-map for that section"
-      4 "never emit full canvas; never invent missing profile state"))
+      2 "if segment satisfied do not restart at P01; frame the decision against locked segment + priority job + accepted P09 alternatives when present (session wording — never hardcode fixed alternative names)"
+      3 "ask one decision-framed question; dispositions (serves outward value / park as orphan / record unknown) live inside that turn's answer — not a multi-prompt menu"
+      4 "never emit full canvas; never invent missing profile state; never treat Values as an autonomy or creativity coach for the product"))
   (express-pacing
     (trigger "user asks to move fast, skip nuance, or gate-only path before session exists or mid-session")
     (init "scripts/init_session.py --pacing-mode express after consent")
@@ -144,11 +146,12 @@ metadata:
     (module-gate
       (when "gate atom accepted with pass and --gate-pending")
       (run "scripts/write_milestone.py --module <module>")
+      (note "write_milestone also refreshes the build pack including north-star-blurb.md")
       (outcome "derive completed from gate decision plus final milestone artifact"))
     (completion-briefs
       (gate-prerequisite "profile, value-map, business-model, and experiments must each be completed or explicitly bypassed")
       (run "scripts/write_design_briefs.py — always writes product-design-brief.md, ux-brief.md, app-design-brief.md")
-      (run "scripts/write_build_pack.py — CONTEXT.product.md, AGENTS.product.md, ui-copy.md, states-and-flows.md, first-value.md, docs/adr/")
+      (run "scripts/write_build_pack.py — CONTEXT.product.md, AGENTS.product.md, ui-copy.md, states-and-flows.md, first-value.md, north-star-blurb.md, docs/adr/")
       (lenses references/export-lenses.md)
       (inputs-only "accepted facts, labeled inferences, explicit decisions, unresolved assumptions")
       (forbidden 'invent-precision 'convert-unknown-to-inference 'bypass-ceremony-as-content)))
@@ -158,6 +161,10 @@ metadata:
       (capture "premature solution ideas, orphan features, and off-phase requests")
       (store "decisions or assumptions with source atom noted")
       (return "resume current profile atom or active atom after capture"))
+    (autonomy
+      (allow "profile may hold autonomy as a job, gain, or priority-sequence need")
+      (park "park autonomy-as-offering when the user proposes autonomy, creativity, or liberty as the offering or expands V01 into an autonomy product; steer back to outward value for someone else")
+      (forbidden 'silent-expansion-of-offering-into-autonomy-coaching-without-reopen-V01))
     (bypass
       (require "one explicit decision record per waived module using decision bypass <module> gate, reason, source_atom, resulting_module, resulting_atom, resulting_status")
       (result "move to the named resulting module and atom with the recorded status")
@@ -168,6 +175,10 @@ metadata:
       1 "run scripts/status.py --brief and scripts/status.py --sections internally"
       2 "report last accepted decision in one sentence using section names, not atom IDs; optional section strip for user"
       3 "run scripts/next_question.py and ask via voice-recipe")
+    (pause
+      (trigger "user says break, pause, stop for now, or close")
+      (run "scripts/write_build_pack.py --force")
+      (speak "exactly one human sentence naming what endured and where we left off — section name, not atom IDs; do not list every output path"))
     (missing-session
       "ask what the user is working on (display name only); derive slug silently; wait for consent; then scripts/init_session.py --name ..."
       (defer "phase-jump, bypass, and satisfy-prerequisite offers until after session.json exists"))

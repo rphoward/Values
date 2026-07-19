@@ -9,6 +9,7 @@
     (ui-copy.md "microcopy for hero, empty, error, success, trust")
     (states-and-flows.md "critical paths + Empty/Loading/Success/Error/Recovery")
     (first-value.md "first-session win and what to hide")
+    (north-star-blurb.md "one early paste-ready outward pitch; draft from accepted answers, not V08 three Blank variations")
     (AGENTS.product.md "Always / Ask first / Never product walls")
     (script scripts/write_build_pack.py))
 
@@ -42,6 +43,12 @@
     (trigger "priority job or top pains/gains; or demo / sampling / activation talk.")
     (guiding_principle "Smallest observable win against current alternative. Hide orphans. Name bombs that block a honest first run."))
 
+  (section North_Star_Lens
+    (principle "Emit north-star-blurb.md as one short outward paragraph plus install CTA.")
+    (trigger "every build-pack run including --force on pause; also after profile milestone so a blurb exists before value-map completes.")
+    (guiding_principle "Who (P01), progress/job (P03/P11), why it matters to someone else (pain/gain as available). Plain Discord text. Mark draft from accepted session state. Do not duplicate V08 three Blank ad-lib variations.")
+    (forbidden 'claim-validated-demand 'autonomy-as-offering-without-reopen))
+
   (section inputs-only
     (allow "accepted facts, labeled inferences, explicit decisions, unresolved assumptions and unknowns")
-    (forbidden 'bypass-ceremony-as-content 'invent-precision 'convert-unknown-to-inference 'quote-atom-ids-in-user-facing-copy)))
+    (forbidden 'bypass-ceremony-as-content 'invent-precision 'convert-unknown-to-inference 'quote-atom-ids-in-user-facing-copy 'autonomy-as-offering-without-reopen)))
