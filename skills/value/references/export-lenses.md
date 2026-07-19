@@ -9,7 +9,8 @@
     (ui-copy.md "microcopy for hero, empty, error, success, trust")
     (states-and-flows.md "critical paths + Empty/Loading/Success/Error/Recovery")
     (first-value.md "first-session win and what to hide")
-    (north-star-blurb.md "one early paste-ready outward pitch; draft from accepted answers, not V08 three Blank variations")
+    (north-star-blurb.md "Discord paste lens: one outward paragraph plus install CTA; body matches value-trail outward pitch")
+    (value-trail.md "intentional-value spine: progressive sticky crumbs from accepted answers")
     (AGENTS.product.md "Always / Ask first / Never product walls")
     (script scripts/write_build_pack.py))
 
@@ -36,18 +37,26 @@
   (section UI_Copy_Lens
     (principle "Emit ui-copy.md keyed to those states.")
     (trigger "same as UI_State_Lens, or user asks for microcopy / hero / onboarding copy.")
-    (guiding_principle "Steal phrasing from accepted answers. Label evidence kind. Leave unknown as unknown — do not invent charm."))
+    (guiding_principle "Prefer customer language already on value-trail.md when present. Steal phrasing from accepted answers. Label evidence kind. Leave unknown as unknown — do not invent charm."))
 
   (section First_Value_Lens
     (principle "Emit first-value.md for first-session win and what to hide.")
     (trigger "priority job or top pains/gains; or demo / sampling / activation talk.")
-    (guiding_principle "Smallest observable win against current alternative. Hide orphans. Name bombs that block a honest first run."))
+    (guiding_principle "Prefer customer language already on value-trail.md when present. Smallest observable win against current alternative. Hide orphans. Name bombs that block a honest first run."))
+
+  (section Value_Trail_Lens
+    (principle "Emit value-trail.md as the intentional-value spine — sticky progressive crumbs, not a path dump.")
+    (trigger "every build-pack refresh including --force on pause; grows as profile and value-map answers land.")
+    (guiding_principle "One section per answered crumb in registry order. Sticky customer language with evidence kind. Outward pitch paragraph shared with north-star blurb body. Progressive disclosure like cognitive_murder; segment fit like pregnant_man_trap and fit_check_rules; no spreadsheet_mirage precision. Do not emit V08 three ad-libs, atom IDs, or Ledger lines.")
+    (surface "on-ask for trail, breadcrumbs, value record, marketing, or ads — quote trail or newest crumbs in chat; on pause/milestone quote Discord blurb plus one short line naming which trail section titles grew — never paste the full trail")
+    (forbidden 'claim-validated-demand 'path-only-without-quoting-trail 'requiring-a-canvas 'install-cta-in-trail))
 
   (section North_Star_Lens
-    (principle "Emit north-star-blurb.md as one short outward paragraph plus install CTA.")
+    (principle "Emit north-star-blurb.md as Discord paste lens: outward pitch paragraph plus install CTA only here.")
     (trigger "every build-pack run including --force on pause; also after profile milestone so a blurb exists before value-map completes.")
-    (guiding_principle "Who (P01), progress/job (P03/P11), why it matters to someone else (pain/gain as available). Plain Discord text. Mark draft from accepted session state. Do not duplicate V08 three Blank ad-lib variations.")
-    (forbidden 'claim-validated-demand 'autonomy-as-offering-without-reopen))
+    (guiding_principle "Body from value-trail outward_pitch crumb (who P01, job P03/P11, why P07/P08). Plain Discord text. Mark draft from accepted session state. Do not duplicate V08 three Blank ad-lib variations.")
+    (surface "orchestrator quotes ## Blurb and ## Install in chat on milestone, pause, completion, and on-ask — file is backup, not the only door; add one short line naming which value-trail section titles grew since last refresh")
+    (forbidden 'claim-validated-demand 'autonomy-as-offering-without-reopen 'path-only-without-quoting-blurb))
 
   (section inputs-only
     (allow "accepted facts, labeled inferences, explicit decisions, unresolved assumptions and unknowns")

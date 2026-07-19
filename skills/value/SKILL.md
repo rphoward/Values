@@ -31,6 +31,7 @@ metadata:
       (states-and-flows-template assets/states-and-flows.template.md)
       (first-value-template assets/first-value.template.md)
       (north-star-blurb-template assets/north-star-blurb.template.md)
+      (value-trail-template assets/value-trail.template.md)
       (customer-profile-template assets/customer-profile.template.md)
       (value-map-template assets/value-map.template.md)
       (business-model-template assets/business-model.template.md)
@@ -147,14 +148,25 @@ metadata:
       (when "gate atom accepted with pass and --gate-pending")
       (run "scripts/write_milestone.py --module <module>")
       (note "write_milestone also refreshes the build pack including north-star-blurb.md")
+      (surface-north-star "after milestone refresh, quote ## Blurb and ## Install from north-star-blurb.md once in chat — paste-ready, not a path scavenger hunt; add one short line naming which value-trail section titles grew")
       (outcome "derive completed from gate decision plus final milestone artifact"))
     (completion-briefs
       (gate-prerequisite "profile, value-map, business-model, and experiments must each be completed or explicitly bypassed")
       (run "scripts/write_design_briefs.py — always writes product-design-brief.md, ux-brief.md, app-design-brief.md")
-      (run "scripts/write_build_pack.py — CONTEXT.product.md, AGENTS.product.md, ui-copy.md, states-and-flows.md, first-value.md, north-star-blurb.md, docs/adr/")
+      (run "scripts/write_build_pack.py — CONTEXT.product.md, AGENTS.product.md, ui-copy.md, states-and-flows.md, first-value.md, north-star-blurb.md, value-trail.md, docs/adr/")
+      (surface-north-star "quote ## Blurb and ## Install from north-star-blurb.md once in chat when the pack is written; add one short line naming which value-trail section titles grew")
       (lenses references/export-lenses.md)
       (inputs-only "accepted facts, labeled inferences, explicit decisions, unresolved assumptions")
       (forbidden 'invent-precision 'convert-unknown-to-inference 'bypass-ceremony-as-content)))
+    (north-star-blurb
+      (file "north-star-blurb.md under the session root")
+      (on-ask "when user asks for discord, blurb, pitch, north star, or paste — read the file and quote ## Blurb plus ## Install in chat")
+      (forbidden 'only-mentioning-file-path-without-quoting-body 'requiring-a-canvas-to-see-the-blurb))
+    (value-trail
+      (file "value-trail.md under the session root")
+      (on-ask "when user asks for trail, breadcrumbs, value record, marketing, or ads — read value-trail.md and quote the trail or newest crumbs in chat")
+      (pause-milestone "do not paste the entire trail; quote Discord blurb as today, plus one short line naming which trail section titles grew")
+      (forbidden 'path-only-without-quoting-trail 'requiring-a-canvas-to-see-the-trail))
 
   (protocol-5-parking-and-bypass
     (parking-lot
@@ -178,7 +190,8 @@ metadata:
     (pause
       (trigger "user says break, pause, stop for now, or close")
       (run "scripts/write_build_pack.py --force")
-      (speak "exactly one human sentence naming what endured and where we left off — section name, not atom IDs; do not list every output path"))
+      (speak "one human sentence naming what endured and where we left off — section name, not atom IDs; do not list every output path")
+      (then "quote ## Blurb and ## Install from the refreshed north-star-blurb.md in chat so paste does not require opening the file or a canvas; add one short line naming which value-trail section titles grew — do not paste the full trail"))
     (missing-session
       "ask what the user is working on (display name only); derive slug silently; wait for consent; then scripts/init_session.py --name ..."
       (defer "phase-jump, bypass, and satisfy-prerequisite offers until after session.json exists"))

@@ -42,6 +42,35 @@ BUILD_PACK_FILES = (
     ("states-and-flows.template.md", "states-and-flows.md"),
     ("first-value.template.md", "first-value.md"),
     ("north-star-blurb.template.md", "north-star-blurb.md"),
+    ("value-trail.template.md", "value-trail.md"),
+)
+VALUE_TRAIL_CRUMBS: tuple[dict[str, Any], ...] = (
+    {"id": "segment", "title": "Who it is for", "sources": ("P01",)},
+    {"id": "job", "title": "Progress they want", "sources": ("P11", "P03")},
+    {
+        "id": "why_outward",
+        "title": "Why it matters to someone else",
+        "sources": ("P07", "P08"),
+    },
+    {
+        "id": "outward_pitch",
+        "title": "Outward pitch",
+        "sources": ("P01", "P03", "P11", "P07", "P08"),
+    },
+    {"id": "offering", "title": "Offering boundary", "sources": ("V01",)},
+    {"id": "parts", "title": "What is in the box", "sources": ("V02",)},
+    {"id": "relief", "title": "Pain relief claims", "sources": ("V03",)},
+    {"id": "gains_created", "title": "Gain creation claims", "sources": ("V04",)},
+    {
+        "id": "difference",
+        "title": "Difference vs alternatives",
+        "sources": ("V07",),
+    },
+    {
+        "id": "first_win",
+        "title": "Smallest first win",
+        "sources": ("P03", "P11", "P08", "P09"),
+    },
 )
 MATCH_BOARD_ATOMS = {
     "V03": ("P07", "pains", "Which offering part reduces which pain, and how?"),
@@ -931,10 +960,18 @@ def answer_text(session: dict[str, Any], atom_id: str) -> str:
     return record["answer"].strip()
 
 
-def fill_north_star_blurb(session: dict[str, Any]) -> str:
-    """One early paste-ready north-star paragraph (distinct from V08 three ad-libs)."""
-    template = (ASSETS_DIR / "north-star-blurb.template.md").read_text(encoding="utf-8")
-    project_name = session.get("project", {}).get("name", "Project")
+def _first_answered_record(
+    session: dict[str, Any], atom_ids: tuple[str, ...]
+) -> dict[str, Any] | None:
+    for atom_id in atom_ids:
+        record = current_answer(session, atom_id)
+        if record is not None and not is_ceremony_answer(record):
+            return record
+    return None
+
+
+def compose_outward_pitch(session: dict[str, Any]) -> str:
+    """Outward pitch paragraph shared by north-star blurb and value-trail."""
     segment = answer_text(session, "P01")
     job = answer_text(session, "P11") or answer_text(session, "P03")
     why = answer_text(session, "P07") or answer_text(session, "P08")
@@ -942,11 +979,90 @@ def fill_north_star_blurb(session: dict[str, Any]) -> str:
     job_bit = sticky_label(job, max_words=14) if job else "make progress that matters"
     if why:
         why_bit = sticky_label(why, max_words=16)
-        paragraph = (
-            f"For {who_bit}: help them {job_bit} — because {why_bit}."
-        )
-    else:
-        paragraph = f"For {who_bit}: help them {job_bit}."
+        return f"For {who_bit}: help them {job_bit} — because {why_bit}."
+    return f"For {who_bit}: help them {job_bit}."
+
+
+def _value_trail_crumb_visible(session: dict[str, Any], crumb: dict[str, Any]) -> bool:
+    crumb_id = crumb["id"]
+    if crumb_id == "first_win":
+        return any(answer_text(session, atom_id) for atom_id in ("P03", "P11", "P08"))
+    return any(answer_text(session, atom_id) for atom_id in crumb["sources"])
+
+
+def _format_value_trail_crumb_body(
+    session: dict[str, Any], crumb: dict[str, Any]
+) -> str:
+    crumb_id = crumb["id"]
+    if crumb_id == "outward_pitch":
+        return compose_outward_pitch(session)
+    if crumb_id == "job":
+        record = _first_answered_record(session, ("P11", "P03"))
+        if record is None:
+            return ""
+        return f"({record['kind']}) {sticky_label(record['answer'])}"
+    if crumb_id == "why_outward":
+        record = _first_answered_record(session, ("P07", "P08"))
+        if record is None:
+            return ""
+        text = record["answer"].strip()
+        if record["atom_id"] == "P07":
+            items = _prefer_extreme_first(split_sticky_items(text))
+            sticky = sticky_label(items[0]) if items else sticky_label(text)
+        else:
+            sticky = sticky_label(text)
+        return f"({record['kind']}) {sticky}"
+    if crumb_id == "parts":
+        record = _first_answered_record(session, ("V02",))
+        if record is None:
+            return ""
+        items = split_sticky_items(record["answer"])
+        kind = record["kind"]
+        return "\n".join(f"- ({kind}) {sticky_label(item)}" for item in items)
+    if crumb_id == "first_win":
+        lines: list[str] = []
+        win_record = _first_answered_record(session, ("P11", "P03", "P08"))
+        if win_record is not None:
+            lines.append(
+                f"({win_record['kind']}) {sticky_label(win_record['answer'])}"
+            )
+        alt_record = _first_answered_record(session, ("P09",))
+        if alt_record is not None:
+            lines.append(
+                f"({alt_record['kind']}) Beat: {sticky_label(alt_record['answer'])}"
+            )
+        return "\n".join(lines)
+    record = _first_answered_record(session, crumb["sources"])
+    if record is None:
+        return ""
+    return f"({record['kind']}) {sticky_label(record['answer'])}"
+
+
+def fill_value_trail(session: dict[str, Any]) -> str:
+    template = (ASSETS_DIR / "value-trail.template.md").read_text(encoding="utf-8")
+    project_name = session.get("project", {}).get("name", "Project")
+    sections: list[str] = []
+    for crumb in VALUE_TRAIL_CRUMBS:
+        if not _value_trail_crumb_visible(session, crumb):
+            continue
+        body = _format_value_trail_crumb_body(session, crumb).strip()
+        if not body:
+            continue
+        sections.append(f"## {crumb['title']}\n\n{body}")
+    body_text = "\n\n".join(sections)
+    return (
+        template.replace("PROJECT_NAME", project_name)
+        .replace("VALUE_TRAIL_BODY", body_text)
+        .rstrip()
+        + "\n"
+    )
+
+
+def fill_north_star_blurb(session: dict[str, Any]) -> str:
+    """One early paste-ready north-star paragraph (distinct from V08 three ad-libs)."""
+    template = (ASSETS_DIR / "north-star-blurb.template.md").read_text(encoding="utf-8")
+    project_name = session.get("project", {}).get("name", "Project")
+    paragraph = compose_outward_pitch(session)
     install = "npx skills add rphoward/Values"
     return (
         template.replace("PROJECT_NAME", project_name)
@@ -1118,6 +1234,8 @@ def write_hard_decision_adrs(session: dict[str, Any], session_dir: Path) -> list
 def fill_build_pack_file(session: dict[str, Any], template_name: str) -> str:
     if template_name == "north-star-blurb.template.md":
         return fill_north_star_blurb(session)
+    if template_name == "value-trail.template.md":
+        return fill_value_trail(session)
 
     template = (ASSETS_DIR / template_name).read_text(encoding="utf-8")
     section_map = load_section_map().get("ide_exports", {}).get(template_name, {})
@@ -1171,7 +1289,7 @@ def fill_build_pack_file(session: dict[str, Any], template_name: str) -> str:
 
 
 def refresh_build_pack(session: dict[str, Any], session_dir: Path) -> list[Path]:
-    """Write IDE export pack files (including north-star blurb) and hard-decision ADRs."""
+    """Write IDE export pack files (including north-star blurb and value trail) and hard-decision ADRs."""
     written: list[Path] = []
     for template_name, output_name in BUILD_PACK_FILES:
         output_path = session_dir / output_name
