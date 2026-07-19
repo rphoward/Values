@@ -19,11 +19,17 @@ metadata:
       (value-map references/value-map.md)
       (business-model references/business-model.md)
       (experiments references/experiments.md)
-      (session-contract references/session-contract.md))
+      (session-contract references/session-contract.md)
+      (export-lenses references/export-lenses.md))
     (assets
       (session-schema assets/session.schema.json)
       (atoms-index assets/atoms.json)
       (knowledge-base assets/knowledge-base.json)
+      (context-product-template assets/CONTEXT.product.template.md)
+      (agents-product-template assets/AGENTS.product.template.md)
+      (ui-copy-template assets/ui-copy.template.md)
+      (states-and-flows-template assets/states-and-flows.template.md)
+      (first-value-template assets/first-value.template.md)
       (customer-profile-template assets/customer-profile.template.md)
       (value-map-template assets/value-map.template.md)
       (business-model-template assets/business-model.template.md)
@@ -43,7 +49,8 @@ metadata:
       (map scripts/map_gaps.py)
       (pacing scripts/set_pacing_mode.py)
       (milestone scripts/write_milestone.py)
-      (briefs scripts/write_design_briefs.py)))
+      (briefs scripts/write_design_briefs.py)
+      (build-pack scripts/write_build_pack.py)))
 
   <central_idea>
   (center-of-gravity
@@ -141,8 +148,10 @@ metadata:
     (completion-briefs
       (gate-prerequisite "profile, value-map, business-model, and experiments must each be completed or explicitly bypassed")
       (run "scripts/write_design_briefs.py — always writes product-design-brief.md, ux-brief.md, app-design-brief.md")
+      (run "scripts/write_build_pack.py — CONTEXT.product.md, AGENTS.product.md, ui-copy.md, states-and-flows.md, first-value.md, docs/adr/")
+      (lenses references/export-lenses.md)
       (inputs-only "accepted facts, labeled inferences, explicit decisions, unresolved assumptions")
-      (forbidden 'invent-precision 'convert-unknown-to-inference)))
+      (forbidden 'invent-precision 'convert-unknown-to-inference 'bypass-ceremony-as-content)))
 
   (protocol-5-parking-and-bypass
     (parking-lot

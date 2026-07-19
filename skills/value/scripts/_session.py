@@ -35,6 +35,22 @@ DESIGN_BRIEFS = (
     ("ux-brief.template.md", "ux-brief.md"),
     ("app-design-brief.template.md", "app-design-brief.md"),
 )
+BUILD_PACK_FILES = (
+    ("CONTEXT.product.template.md", "CONTEXT.product.md"),
+    ("AGENTS.product.template.md", "AGENTS.product.md"),
+    ("ui-copy.template.md", "ui-copy.md"),
+    ("states-and-flows.template.md", "states-and-flows.md"),
+    ("first-value.template.md", "first-value.md"),
+)
+HARD_DECISION_MARKERS = (
+    "bypass",
+    "orphan",
+    "segment boundary",
+    "excluded",
+    "park",
+    "non-goal",
+    "out of scope",
+)
 CANONICAL_GATE_PASS = {
     "profile": "pass profile gate",
     "value-map": "pass value-map gate",
@@ -248,6 +264,25 @@ def canonical_gate_pass_text(module: str) -> str:
 def is_canonical_bypass_decision(text: str) -> bool:
     lowered = text.lower().strip()
     return "bypass" in lowered and " gate" in lowered
+
+
+def is_ceremony_answer(record: dict[str, Any]) -> bool:
+    """True when an answers[] row is gate/bypass ceremony, not customer content."""
+    text = record.get("answer", "").lower().strip()
+    if not text:
+        return True
+    if is_canonical_bypass_decision(text):
+        return True
+    if text.startswith("recorded bypass"):
+        return True
+    if "bypass" in text and "gate" in text:
+        return True
+    return False
+
+
+def is_hard_decision(decision: dict[str, Any]) -> bool:
+    text = f"{decision.get('decision', '')} {decision.get('reason', '')}".lower()
+    return any(marker in text for marker in HARD_DECISION_MARKERS)
 
 
 def records_allow_off_position(records_payload: dict[str, Any] | None) -> bool:
@@ -784,12 +819,24 @@ def format_answer_block(records: list[dict[str, Any]]) -> str:
 
 
 def format_answer_block_for_atoms(session: dict[str, Any], atom_ids: list[str]) -> str:
-    records = [
-        current_answer(session, atom_id)
-        for atom_id in atom_ids
-        if current_answer(session, atom_id)
-    ]
+    records = []
+    for atom_id in atom_ids:
+        record = current_answer(session, atom_id)
+        if record is None or is_ceremony_answer(record):
+            continue
+        records.append(record)
     return format_answer_block(records)
+
+
+def format_content_block_for_atoms(session: dict[str, Any], atom_ids: list[str]) -> str:
+    """Evidence-labeled bullets without atom IDs — for IDE export files."""
+    lines: list[str] = []
+    for atom_id in atom_ids:
+        record = current_answer(session, atom_id)
+        if record is None or is_ceremony_answer(record):
+            continue
+        lines.append(f"- ({record['kind']}) {record['answer']}")
+    return "\n".join(lines) if lines else "unknown"
 
 
 def fill_section(template: str, heading: str, body: str) -> str:
@@ -872,6 +919,114 @@ def fill_design_brief(session: dict[str, Any], template_name: str) -> str:
         for heading in ("Moat and unknown scores", "Excluded scope"):
             if heading not in section_map:
                 template = fill_section(template, heading, assumption_block)
+    return template.rstrip() + "\n"
+
+
+def format_blocking_unknowns(session: dict[str, Any]) -> str:
+    items = [
+        item for item in session.get("unknowns", []) if item.get("blocking")
+    ]
+    if not items:
+        return "none"
+    return "\n".join(f"- {item['question']}" for item in items)
+
+
+def format_bombs_block(session: dict[str, Any]) -> str:
+    bombs = unvalidated_bombs(session)
+    return "\n".join(f"- {item}" for item in bombs) if bombs else "none"
+
+
+def format_orphan_non_goals(session: dict[str, Any]) -> str:
+    body = format_content_block_for_atoms(session, ["V06"])
+    if body != "unknown":
+        return body
+    parked = [
+        f"- {item['decision']}: {item['reason']}"
+        for item in session.get("decisions", [])
+        if "orphan" in f"{item.get('decision', '')} {item.get('reason', '')}".lower()
+        or "park" in f"{item.get('decision', '')} {item.get('reason', '')}".lower()
+    ]
+    return "\n".join(parked) if parked else "none"
+
+
+def slugify_adr(text: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
+    slug = re.sub(r"-+", "-", slug)
+    return (slug[:48].rstrip("-") if slug else "decision")
+
+
+def write_hard_decision_adrs(session: dict[str, Any], session_dir: Path) -> list[Path]:
+    adr_dir = session_dir / "docs" / "adr"
+    hard = [
+        item for item in session.get("decisions", []) if is_hard_decision(item)
+    ]
+    if not hard:
+        return []
+    adr_dir.mkdir(parents=True, exist_ok=True)
+    written: list[Path] = []
+    for index, item in enumerate(hard, start=1):
+        title = item.get("decision", "decision").strip() or "decision"
+        path = adr_dir / f"{index:04d}-{slugify_adr(title)}.md"
+        source = item.get("source_atom", "unknown")
+        body = (
+            f"# {title}\n\n"
+            f"{item.get('reason', '').strip() or 'No reason recorded.'}\n\n"
+            f"_Source atom: {source}_\n"
+        )
+        path.write_text(body, encoding="utf-8")
+        written.append(path)
+    return written
+
+
+def fill_build_pack_file(session: dict[str, Any], template_name: str) -> str:
+    template = (ASSETS_DIR / template_name).read_text(encoding="utf-8")
+    section_map = load_section_map().get("ide_exports", {}).get(template_name, {})
+    project_name = session.get("project", {}).get("name", "Project")
+    template = template.replace("PROJECT_NAME", project_name)
+
+    ask_parts: list[str] = []
+    bombs = unvalidated_bombs(session)
+    if bombs:
+        ask_parts.extend(f"- (bomb) {item}" for item in bombs)
+    for item in session.get("unknowns", []):
+        if item.get("blocking"):
+            ask_parts.append(f"- (blocking unknown) {item['question']}")
+    ask_first = "\n".join(ask_parts) if ask_parts else "- none recorded"
+
+    never_parts = [
+        "- Implement orphan / parked features without an explicit decision.",
+        "- Invent facts past unknowns or upgrade unknown/inference to fact.",
+        "- Expand past the segment exclusion without reopening the decision.",
+    ]
+    orphans = format_orphan_non_goals(session)
+    if orphans != "none":
+        never_parts.append(orphans)
+
+    special_bodies = {
+        "Always": (
+            "- Respect the accepted segment boundary and exclusions.\n"
+            "- Keep evidence labels (fact, inference, hypothesis, decision, unknown).\n"
+            "- Prefer customer language from CONTEXT.product.md."
+        ),
+        "Ask first": ask_first,
+        "Never": "\n".join(never_parts),
+        "Bombs": format_bombs_block(session),
+        "Blocking unknowns": format_blocking_unknowns(session),
+        "Non-goals": format_orphan_non_goals(session),
+        "Flagged unknowns": format_unknowns(session),
+    }
+
+    for heading, atom_ids in section_map.items():
+        if heading in special_bodies:
+            body = special_bodies[heading]
+        else:
+            body = format_content_block_for_atoms(session, atom_ids)
+        template = fill_section(template, heading, body)
+
+    for heading, body in special_bodies.items():
+        if heading not in section_map:
+            template = fill_section(template, heading, body)
+
     return template.rstrip() + "\n"
 
 

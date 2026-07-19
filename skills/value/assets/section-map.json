@@ -64,5 +64,44 @@
       "Primary flows from jobs and channels": ["P03", "B01"],
       "Entities and data from offering": ["V02", "V04"]
     }
+  },
+  "ide_exports": {
+    "CONTEXT.product.template.md": {
+      "Context": ["P01", "P03"],
+      "Segment": ["P01"],
+      "Situation": ["P02"],
+      "Job": ["P03", "P11"],
+      "Pains": ["P07"],
+      "Gains": ["P08"],
+      "Offering": ["V01", "V02"],
+      "Alternatives": ["P09"]
+    },
+    "AGENTS.product.template.md": {},
+    "ui-copy.template.md": {
+      "Voice": ["P01", "P02"],
+      "Hero and primary CTA": ["P03", "P08"],
+      "Empty states": ["P02", "P07"],
+      "Error and recovery": ["P07", "P09"],
+      "Success": ["P08", "P11"],
+      "Trust and evidence": ["P10", "B02"]
+    },
+    "states-and-flows.template.md": {
+      "Primary job flow": ["P03", "P11"],
+      "Trigger and start": ["P02"],
+      "Pain points on the path": ["P07", "V03"],
+      "Desired outcomes": ["P08", "V04"],
+      "Empty": ["P02"],
+      "Loading": ["P02", "P03"],
+      "Success": ["P08", "P11"],
+      "Error": ["P07"],
+      "Recovery": ["P07", "P09"],
+      "Channel and delivery constraints": ["B01", "B02"]
+    },
+    "first-value.template.md": {
+      "Who this is for": ["P01"],
+      "Smallest observable win": ["P03", "P11", "P08"],
+      "Current alternative to beat": ["P09"],
+      "What to hide at first": ["V06"]
+    }
   }
 }

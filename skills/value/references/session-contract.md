@@ -136,7 +136,13 @@
       experiment-plan.md
       product-design-brief.md
       ux-brief.md
-      app-design-brief.md))
+      app-design-brief.md
+      CONTEXT.product.md
+      AGENTS.product.md
+      ui-copy.md
+      states-and-flows.md
+      first-value.md
+      docs/adr/*.md))
 
   (section conflict-handling
     (on-conflict "append a blocking unknown with the conflicting statements; preserve both accepted answers")
@@ -170,7 +176,8 @@
     (map scripts/map_gaps.py — dry-run draft-map without writes)
     (pacing scripts/set_pacing_mode.py — set pacing_mode standard or express and recompute focus)
     (milestone scripts/write_milestone.py — fill module template at gate_pending)
-    (briefs scripts/write_design_briefs.py — always writes product-design-brief.md, ux-brief.md, app-design-brief.md)
+    (briefs scripts/write_design_briefs.py — always writes product-design-brief.md, ux-brief.md, app-design-brief.md; skips bypass-ceremony answers as section content)
+    (build-pack scripts/write_build_pack.py — IDE exports: CONTEXT.product.md, AGENTS.product.md, ui-copy.md, states-and-flows.md, first-value.md, docs/adr/ for hard decisions; lenses in references/export-lenses.md)
     (forbidden 'agent-hand-writes-session-json 're-ask-answered-atom-without-reopen))
 
   (section milestone-writes
