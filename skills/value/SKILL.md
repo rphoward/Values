@@ -134,7 +134,11 @@ metadata:
   (follow-up "when answer is vague on a hard atom: one focused follow-up; soft atoms accept kind unknown for taxonomy nuance")
   (acceptance "advance when the active atom's (accepts ...) criteria are met or soft atom accepts unknown labels; then scripts/accept_answer.py on any ready atom")
   (blocking-unknown "retain the active atom when its reference marks an unresolved boundary or missing result blocking; pass --stay to accept_answer.py")
-  (reopen "when user reopens an atom use accept_answer.py --reopen --conflict-note; do not re-ask answered atoms otherwise")
+  (reopen
+    (when "user asks to revise, change, or reopen a prior answer — e.g. revise segment, pains, job")
+    (run "accept_answer.py --reopen --conflict-note; do not re-ask answered atoms otherwise")
+    (post-fix "after the supersede lands: one short line that the change is locked and they can say revise <area> anytime — not a every-turn prefix or banner")
+    (forbidden 're-ask-without-reopen 'prefix-notification-every-turn 'one-turn-only-edit-unless-explicitly-requested))
   (forbidden 'emit-full-canvas-matrix-or-scorecard-before-required-answers 're-ask-without-reopen))
 
   (protocol-4-answer-and-state
@@ -161,7 +165,8 @@ metadata:
     (north-star-blurb
       (file "north-star-blurb.md under the session root")
       (on-ask "when user asks for discord, blurb, pitch, north star, or paste — read the file and quote ## Blurb plus ## Install in chat")
-      (forbidden 'only-mentioning-file-path-without-quoting-body 'requiring-a-canvas-to-see-the-blurb))
+      (voice "peer Discord: who + freeze + what you get; follow export-lenses North_Star_Lens and Discord_Update_Blurb; docs/values-discord-intro.md for ship posts")
+      (forbidden 'only-mentioning-file-path-without-quoting-body 'requiring-a-canvas-to-see-the-blurb 'ai-slop-pitch-voice 'feature-semicolon-laundry-list))
     (value-trail
       (file "value-trail.md under the session root")
       (on-ask "when user asks for trail, breadcrumbs, value record, marketing, or ads — read value-trail.md and quote the trail or newest crumbs in chat")

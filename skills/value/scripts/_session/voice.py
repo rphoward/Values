@@ -16,8 +16,27 @@ from .constants import (
 from .runtime import current_answer, is_ceremony_answer
 
 
-def sticky_label(text: str, max_words: int = 10) -> str:
-    """Short sticky-note summary for voice rendering (aim ≤10 words)."""
+_TAXONOMY_PREFIX_RE = re.compile(
+    r"^(?:"
+    r"priority\s+job(?:\s*\([^)]*\))?|"
+    r"job|"
+    r"extreme|severe|mild|"
+    r"situation|trigger|audience|"
+    r"buying|co-creating|transferring|"
+    r"usual|sometimes|big temptation|"
+    r"offering|gains?\s+for[^:]*|"
+    r"excluded"
+    r")\s*:\s*",
+    flags=re.IGNORECASE,
+)
+_AUTONOMY_JOB_RE = re.compile(
+    r"\b(autonomy|creativity|liberty|freedom)\b",
+    flags=re.IGNORECASE,
+)
+
+
+def _strip_voice_prefixes(text: str) -> str:
+    """Drop interview labels so paste copy stays customer language."""
     cleaned = re.sub(r"\s+", " ", text).strip()
     cleaned = re.sub(r"^[\(\[]?\d+[\)\].:]?\s*", "", cleaned)
     cleaned = re.sub(r"^[-*•]\s*", "", cleaned)
@@ -27,10 +46,43 @@ def sticky_label(text: str, max_words: int = 10) -> str:
         cleaned,
         flags=re.IGNORECASE,
     )
+    for _ in range(3):
+        next_cleaned = _TAXONOMY_PREFIX_RE.sub("", cleaned).strip()
+        if next_cleaned == cleaned:
+            break
+        cleaned = next_cleaned
+    return cleaned
+
+
+def sticky_label(text: str, max_words: int = 10) -> str:
+    """Short sticky-note summary for voice rendering (aim ≤10 words)."""
+    cleaned = _strip_voice_prefixes(text)
     words = cleaned.split()
     if len(words) <= max_words:
         return cleaned
     return " ".join(words[:max_words])
+
+
+def pitch_clause(text: str, max_words: int = 18) -> str:
+    """Paste-ready clause: strip labels, prefer first natural clause, soft trim."""
+    cleaned = _strip_voice_prefixes(text)
+    for splitter in (";", ". ", " — ", " - ", ": "):
+        if splitter in cleaned:
+            head = cleaned.split(splitter, 1)[0].strip(" ,")
+            if len(head.split()) >= 4:
+                cleaned = head
+                break
+    cleaned = re.sub(
+        r"^(also named|also called)\b.*$",
+        "",
+        cleaned,
+        flags=re.IGNORECASE,
+    ).strip(" ,;—-:")
+    words = cleaned.split()
+    if len(words) <= max_words:
+        return cleaned
+    trimmed = " ".join(words[:max_words]).rstrip(" ,;—-:")
+    return trimmed
 
 
 def split_sticky_items(text: str) -> list[str]:
@@ -127,17 +179,48 @@ def _first_answered_record(
     return None
 
 
+def _de_sentence_case(text: str) -> str:
+    """Lower the lead letter when the clause is a verb phrase, not a proper name."""
+    if len(text) < 2 or not text[0].isupper() or text[1].isupper():
+        return text
+    return text[0].lower() + text[1:]
+
+
 def compose_outward_pitch(session: dict[str, Any]) -> str:
-    """Outward pitch paragraph shared by north-star blurb and value-trail."""
+    """Outward pitch paragraph shared by north-star blurb and value-trail.
+
+    Peer Discord voice: short sentences — who, freeze, what you get. Prefer
+    stated job (P03) over priority-sequence (P11). When the job is
+    autonomy-coded, lean on the outward pain so the paste stays aimed outward.
+    """
     segment = answer_text(session, "P01")
-    job = answer_text(session, "P11") or answer_text(session, "P03")
-    why = answer_text(session, "P07") or answer_text(session, "P08")
-    who_bit = sticky_label(segment, max_words=16) if segment else "this customer"
-    job_bit = sticky_label(job, max_words=14) if job else "make progress that matters"
-    if why:
-        why_bit = sticky_label(why, max_words=16)
-        return f"For {who_bit}: help them {job_bit} — because {why_bit}."
-    return f"For {who_bit}: help them {job_bit}."
+    job = answer_text(session, "P03") or answer_text(session, "P11")
+    why_record = _first_answered_record(session, ("P07", "P08"))
+    who_bit = pitch_clause(segment, max_words=20) if segment else "this customer"
+    why_bit = ""
+    if why_record is not None:
+        why_text = why_record["answer"].strip()
+        if why_record.get("atom_id") == "P07":
+            items = _prefer_extreme_first(split_sticky_items(why_text))
+            why_text = items[0] if items else why_text
+        why_bit = pitch_clause(why_text, max_words=16)
+    job_is_autonomy = bool(job and _AUTONOMY_JOB_RE.search(job))
+    if why_bit and (job_is_autonomy or not job):
+        return (
+            f"For {who_bit}. They freeze on {why_bit}. "
+            "You get a clear outward pitch — not only a clever build."
+        )
+    job_bit = (
+        _de_sentence_case(pitch_clause(job, max_words=14))
+        if job
+        else "make progress that matters"
+    )
+    if why_bit:
+        return (
+            f"For {who_bit}. They freeze on {why_bit}. "
+            f"North star: {job_bit}."
+        )
+    return f"For {who_bit}. North star: {job_bit}."
 
 
 def value_trail_crumb_visible(session: dict[str, Any], crumb: dict[str, Any]) -> bool:

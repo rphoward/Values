@@ -87,7 +87,7 @@
       (artifacts "array of path status upserts"))
     (project-write "set project.updated_at to accepted_at on every accepted answer")
     (append-only "new acceptance appends; reopening a decision adds a superseding record and notes conflict resolution")
-    (reopen "only via accept_answer.py --reopen --conflict-note or explicit user reopen request; refuse duplicate accept without reopen")
+    (reopen "only via accept_answer.py --reopen --conflict-note or explicit user reopen request; refuse duplicate accept without reopen; after supersede, one post-fix line that revise <area> works again — never a standing prefix banner")
     (current-answer "latest answers[] record for an atom_id is the current accepted answer"))
 
   (section position-shape

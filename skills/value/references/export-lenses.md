@@ -54,9 +54,22 @@
   (section North_Star_Lens
     (principle "Emit north-star-blurb.md as Discord paste lens: outward pitch paragraph plus install CTA only here.")
     (trigger "every build-pack run including --force on pause; also after profile milestone so a blurb exists before value-map completes.")
-    (guiding_principle "Body from value-trail outward_pitch crumb (who P01, job P03/P11, why P07/P08). Plain Discord text. Mark draft from accepted session state. Do not duplicate V08 three Blank ad-lib variations.")
+    (guiding_principle "Body from value-trail outward_pitch crumb (who P01, job P03 then P11, why P07 extreme-first / P08). Peer Discord voice: who + freeze + what you get. Prefer P03 over P11; when job is autonomy-coded lean on outward pain. Strip interview labels. Soft-trim at a clause, never mid-label garbage. Plain Discord text. Mark draft from accepted session state. Do not duplicate V08 three Blank ad-lib variations.")
+    (voice
+      (sound-like "For Cursor users who can ship but freeze on why anyone else would care: you get an enduring outward-value record, not only a clever build.")
+      (prefer 'short-scene-before-features 'you-get-concrete-nouns 'peer-aside-ok 'separate-paragraphs-per-theme)
+      (forbidden 'help-them-template 'feature-semicolon-laundry-list 'Priority-job-elevated-in-paste 'Extreme:-label-in-paste 'we-ran-X-on-X-opener))
     (surface "orchestrator quotes ## Blurb and ## Install in chat on milestone, pause, completion, and on-ask — file is backup, not the only door; add one short line naming which value-trail section titles grew since last refresh")
-    (forbidden 'claim-validated-demand 'autonomy-as-offering-without-reopen 'path-only-without-quoting-blurb))
+    (forbidden 'claim-validated-demand 'autonomy-as-offering-without-reopen 'path-only-without-quoting-blurb 'ai-slop-pitch-voice))
+
+  (section Discord_Update_Blurb
+    (principle "Ship and mid-morning upgrade posts use the same peer voice as the north-star paste — human Discord, not release-notes marketing.")
+    (when "user asks for discord blurb / update post after skill upgrades, or docs/values-discord-intro.md is refreshed")
+    (voice
+      (open "casual first-person or we-did-this-morning; one short scene that names the north-star win")
+      (body "cause then upgrade: what the session spotted, then what shipped; separate short paragraphs per theme; you-get language")
+      (close "one who + freeze + what you get line; honest out-of-scope when needed")
+      (forbidden 'We-ran-Values-on-Values-then-semicolon-feature-list 'cleverer-for-us 'Same-idea-as-before-closer 'tables-in-discord-paste)))
 
   (section inputs-only
     (allow "accepted facts, labeled inferences, explicit decisions, unresolved assumptions and unknowns")
