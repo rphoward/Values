@@ -165,8 +165,8 @@ metadata:
     (north-star-blurb
       (file "north-star-blurb.md under the session root")
       (on-ask "when user asks for discord, blurb, pitch, north star, or paste — read the file and quote ## Blurb plus ## Install in chat")
-      (voice "peer Discord: who + freeze + what you get; follow export-lenses North_Star_Lens and Discord_Update_Blurb; docs/values-discord-intro.md for ship posts")
-      (forbidden 'only-mentioning-file-path-without-quoting-body 'requiring-a-canvas-to-see-the-blurb 'ai-slop-pitch-voice 'feature-semicolon-laundry-list))
+      (voice "peer Discord: who + freeze + what you get; so-what each feature into daily relief; Connection stays private; follow export-lenses North_Star_Lens and Discord_Update_Blurb; docs/values-discord-intro.md for ship posts")
+      (forbidden 'only-mentioning-file-path-without-quoting-body 'requiring-a-canvas-to-see-the-blurb 'ai-slop-pitch-voice 'feature-semicolon-laundry-list 'false-pitch-enthusiasm))
     (value-trail
       (file "value-trail.md under the session root")
       (on-ask "when user asks for trail, breadcrumbs, value record, marketing, or ads — read value-trail.md and quote the trail or newest crumbs in chat")

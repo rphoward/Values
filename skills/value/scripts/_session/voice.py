@@ -189,7 +189,8 @@ def _de_sentence_case(text: str) -> str:
 def compose_outward_pitch(session: dict[str, Any]) -> str:
     """Outward pitch paragraph shared by north-star blurb and value-trail.
 
-    Peer Discord voice: short sentences — who, freeze, what you get. Prefer
+    Peer Discord voice: short sentences — who, freeze, what you get. So-what
+    features into daily relief; never a fourth Connection beat. Prefer
     stated job (P03) over priority-sequence (P11). When the job is
     autonomy-coded, lean on the outward pain so the paste stays aimed outward.
     """

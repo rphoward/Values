@@ -56,9 +56,13 @@
     (trigger "every build-pack run including --force on pause; also after profile milestone so a blurb exists before value-map completes.")
     (guiding_principle "Body from value-trail outward_pitch crumb (who P01, job P03 then P11, why P07 extreme-first / P08). Peer Discord voice: who + freeze + what you get. Prefer P03 over P11; when job is autonomy-coded lean on outward pain. Strip interview labels. Soft-trim at a clause, never mid-label garbage. Plain Discord text. Mark draft from accepted session state. Do not duplicate V08 three Blank ad-lib variations.")
     (voice
-      (sound-like "For Cursor users who can ship but freeze on why anyone else would care: you get an enduring outward-value record, not only a clever build.")
-      (prefer 'short-scene-before-features 'you-get-concrete-nouns 'peer-aside-ok 'separate-paragraphs-per-theme)
-      (forbidden 'help-them-template 'feature-semicolon-laundry-list 'Priority-job-elevated-in-paste 'Extreme:-label-in-paste 'we-ran-X-on-X-opener))
+      (role "peer builder in Discord — stark literal facts aimed at daily relief, not pitch enthusiasm")
+      (shape "who + freeze + what you get — Connection is a private so-what check, never a fourth written beat")
+      (so-what "for each feature note ask so what until the exact daily relief; never paste the chain")
+      (sound-like "You ship into the showcase and get almost no traction. The build isn't what's stuck — you can't say why someone else would care enough to keep going. For Cursor friends who can ship but freeze on why would anyone else care: you get an outward north star that sticks, not another clever build that dies in the showcase.")
+      (prefer 'one-idea-per-sentence 'cut-at-real-clause 'short-scene-before-features 'you-get-concrete-nouns 'peer-aside-ok 'separate-paragraphs-per-theme 'you-get-over-the-skill-now)
+      (allow "casual I/we openers on update posts; tool-as-subject only when you-get would contort")
+      (forbidden 'help-them-template 'feature-semicolon-laundry-list 'Priority-job-elevated-in-paste 'Extreme:-label-in-paste 'we-ran-X-on-X-opener 'seamless 'revolutionary 'unlock 'leverage 'supercharge 'empower 'false-pitch-enthusiasm))
     (surface "orchestrator quotes ## Blurb and ## Install in chat on milestone, pause, completion, and on-ask — file is backup, not the only door; add one short line naming which value-trail section titles grew since last refresh")
     (forbidden 'claim-validated-demand 'autonomy-as-offering-without-reopen 'path-only-without-quoting-blurb 'ai-slop-pitch-voice))
 
@@ -66,10 +70,11 @@
     (principle "Ship and mid-morning upgrade posts use the same peer voice as the north-star paste — human Discord, not release-notes marketing.")
     (when "user asks for discord blurb / update post after skill upgrades, or docs/values-discord-intro.md is refreshed")
     (voice
+      (role "same peer voice as North_Star_Lens — relief over features")
       (open "casual first-person or we-did-this-morning; one short scene that names the north-star win")
-      (body "cause then upgrade: what the session spotted, then what shipped; separate short paragraphs per theme; you-get language")
-      (close "one who + freeze + what you get line; honest out-of-scope when needed")
-      (forbidden 'We-ran-Values-on-Values-then-semicolon-feature-list 'cleverer-for-us 'Same-idea-as-before-closer 'tables-in-discord-paste)))
+      (body "cause then upgrade: what the session spotted, then what shipped; separate short paragraphs per theme; you-get language; so-what each upgrade into daily relief before writing")
+      (close "one who + freeze + what you get line; honest out-of-scope when needed; do not add a fourth Connection paragraph")
+      (forbidden 'We-ran-Values-on-Values-then-semicolon-feature-list 'cleverer-for-us 'Same-idea-as-before-closer 'tables-in-discord-paste 'seamless 'revolutionary 'unlock 'leverage 'supercharge 'empower 'false-pitch-enthusiasm)))
 
   (section inputs-only
     (allow "accepted facts, labeled inferences, explicit decisions, unresolved assumptions and unknowns")
