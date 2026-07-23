@@ -12,4 +12,6 @@ Fill from accepted session state for the value-map module. Label each entry with
 
 ## Orphan candidates
 
+## Differentiation
+
 ## Decisions

@@ -18,9 +18,9 @@
       decisions
       unknowns
       artifacts)
-    (optional-top-level pacing_mode)
+    (optional-top-level pacing_mode lean_import)
     (schema-version "1.0 or 1.1 — lazy upgrade on read sets 1.1")
-    (pacing-mode "standard default; express schedules gate spine only — profile P01 P03 P11 P12, value-map V01 V08, business-model B01 B08, experiments E01 E03 E10")
+    (pacing-mode "standard default; express schedules gate spine only — agent-internal; user sees section names on the progress strip, never spine codes")
     (project-fields slug name created_at updated_at)
     (slug-format "lowercase ASCII letters, digits, and single hyphens only; must match ^[a-z0-9]+(?:-[a-z0-9]+)*$")
     (position-fields module atom_id status)
@@ -78,6 +78,9 @@
       (answer "accepted text for this atom")
       (kind "one of fact inference hypothesis decision unknown")
       (accepted_at "RFC 3339 timestamp"))
+    (optional provenance source_atom reopen conflict_note)
+    (provenance-lean-import "answer copied from lean-mvp skill; do not re-ask unless user reopens")
+    (lean-import-top-level "optional lean_import records source_session imported_at mapped_atoms when any lean import lands")
     (sidecar "accept_answer.py --records path.json may append evidence assumptions decisions unknowns artifacts in one write")
     (sidecar-shape
       (evidence "array of claim kind source strength")
@@ -170,7 +173,8 @@
 
   (section script-orchestration
     (init scripts/init_session.py — creates session after explicit user consent; --name required, --slug optional derived from name; agent must not call without consent)
-    (status scripts/status.py — default human brief line; --operator full ledger; --sections section strip on resume or when user asks progress)
+    (status scripts/status.py — default human brief line agent-internal only; --operator full ledger for tests/debug; --sections one strip line shown to user on resume, where-am-I/progress, pause, or after a module gate — never every turn)
+    (value-map-gate-review "value-map gate uses inline stickies per SKILL value-map-gate-review; user may ask to walk through Fit links or Differentiation in plain English before pass; ad-lib pitch on-ask only; never atom IDs or cryptic triggers to the user")
     (next scripts/next_question.py — emit scheduler focus atom with section; JSON agent-internal; --gaps for gap lists)
     (accept scripts/accept_answer.py — append answer on any ready atom; optional --records sidecar; refuse duplicate without --reopen)
     (gaps scripts/gaps.py — hard and soft gaps by section)
@@ -180,8 +184,8 @@
     (milestone scripts/write_milestone.py — fill module template at gate_pending; also refreshes build pack including north-star-blurb.md)
     (briefs scripts/write_design_briefs.py — always writes product-design-brief.md, ux-brief.md, app-design-brief.md; skips bypass-ceremony answers as section content)
     (build-pack scripts/write_build_pack.py — IDE exports: CONTEXT.product.md, AGENTS.product.md, ui-copy.md, states-and-flows.md, first-value.md, north-star-blurb.md, value-trail.md, docs/adr/ for hard decisions; lenses in references/export-lenses.md)
-    (next-match-board "when focus is V03 or V04, next_question.py adds agent-internal match_board and match_prompt; never quote raw JSON to the user")
-    (forbidden 'agent-hand-writes-session-json 're-ask-answered-atom-without-reopen 'autonomy-as-offering-without-reopen-V01))
+    (next-match-board "when focus is pain relievers or gain creators, next_question.py adds agent-internal match_board and match_prompt; never quote raw JSON or atom IDs to the user")
+    (forbidden 'agent-hand-writes-session-json 're-ask-answered-atom-without-reopen 'autonomy-as-offering-without-reopen-offering-boundary))
 
   (section milestone-writes
     (trigger "module gate_pending after gate atom accepted with --gate-pending, or --records resulting_status gate_pending")

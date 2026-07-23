@@ -25,6 +25,19 @@
       "type": "string",
       "enum": ["standard", "express"]
     },
+    "lean_import": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_session", "imported_at", "mapped_atoms"],
+      "properties": {
+        "source_session": { "type": "string" },
+        "imported_at": { "type": "string" },
+        "mapped_atoms": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^(P|V|B|E)[0-9]{2}$" }
+        }
+      }
+    },
     "project": {
       "$ref": "#/$defs/project"
     },
@@ -221,6 +234,8 @@
           "format": "date-time",
           "pattern": "^(?:(?:[0-9]{4}-(?:(?:01|03|05|07|08|10|12)-(?:0[1-9]|[12][0-9]|3[01])|(?:04|06|09|11)-(?:0[1-9]|[12][0-9]|30)|02-(?:0[1-9]|1[0-9]|2[0-8])))|(?:(?:[0-9]{2}(?:0[48]|[2468][048]|[13579][26])|(?:0[48]|[2468][048]|[13579][26])00)-02-29))T(?:[01][0-9]|2[0-3]):[0-5][0-9]:(?:[0-5][0-9]|60)(?:\\.[0-9]+)?(?:Z|[+-](?:[01][0-9]|2[0-3]):[0-5][0-9])$"
         },
+        "provenance": { "type": "string", "enum": ["lean-import"] },
+        "source_atom": { "type": "string" },
         "reopen": {
           "type": "boolean"
         },

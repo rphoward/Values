@@ -17,6 +17,7 @@ _atom_indexes_built = False
 GATE_ATOMS: dict[str, str] = {}
 MODULE_ATOMS: dict[str, tuple[str, ...]] = {}
 ATOM_MODULE_BY_ID: dict[str, str] = {}
+ATOM_SECTION_BY_ID: dict[str, str] = {}
 REVERSE_UNLOCKS: dict[str, list[str]] = {}
 
 
@@ -28,6 +29,7 @@ def reset_atom_indexes() -> None:
     MODULE_ATOMS.clear()
     ATOM_MODULE_BY_ID.clear()
     REVERSE_UNLOCKS.clear()
+    ATOM_SECTION_BY_ID.clear()
 
 
 def utc_now_iso() -> str:
@@ -76,9 +78,33 @@ def _build_atom_indexes() -> None:
     MODULE_ATOMS.update({module: tuple(ids) for module, ids in module_atoms.items()})
     ATOM_MODULE_BY_ID.clear()
     ATOM_MODULE_BY_ID.update(atom_module_by_id)
+    ATOM_SECTION_BY_ID.clear()
+    ATOM_SECTION_BY_ID.update(
+        {atom["id"]: atom.get("section", "Other") for atom in load_atoms()}
+    )
     REVERSE_UNLOCKS.clear()
     REVERSE_UNLOCKS.update(reverse_unlocks)
     _atom_indexes_built = True
+
+
+def atom_section_label(atom_id: str) -> str:
+    """Human section name for an atom — for ADRs and artifacts, not chat codes."""
+    _build_atom_indexes()
+    return ATOM_SECTION_BY_ID.get(atom_id, "Other")
+
+
+def atom_provenance_label(atom_id: str) -> str:
+    """Module + section label for durable records without atom codes."""
+    _build_atom_indexes()
+    module = ATOM_MODULE_BY_ID.get(atom_id, "session")
+    section = atom_section_label(atom_id)
+    module_names = {
+        "profile": "Customer profile",
+        "value-map": "Value map",
+        "business-model": "Business model",
+        "experiments": "Experiments",
+    }
+    return f"{module_names.get(module, module)} — {section}"
 
 
 def atom_by_id(atoms: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
@@ -118,3 +144,25 @@ def derive_slug_from_name(name: str) -> str:
     if not slug or not SLUG_RE.fullmatch(slug):
         raise ValueError(f"Cannot derive path-safe slug from name: {name!r}")
     return slug
+
+
+def resolve_repo_root() -> Path | None:
+    """Repo root when skill lives under skills/<name> or .cursor/skills/<name>."""
+    skill = SKILL_ROOT
+    candidates: list[Path] = []
+    if skill.parent.name == "skills" and skill.parent.parent.name == ".cursor":
+        candidates.append(skill.parent.parent.parent)
+    if skill.parent.name == "skills":
+        candidates.append(skill.parent.parent)
+    for root in candidates:
+        if (root / ".git").exists() or (root / "AGENTS.md").is_file():
+            return root
+    return candidates[0] if candidates else None
+
+
+def default_lean_mvp_workproduct_root() -> Path:
+    """Prefer <repo>/workproduct/lean-mvp over cwd-relative paths."""
+    repo = resolve_repo_root()
+    if repo is not None:
+        return repo / "workproduct" / "lean-mvp"
+    return Path("workproduct/lean-mvp")

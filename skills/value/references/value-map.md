@@ -76,7 +76,12 @@
     (id V08)
     (name "value-map gate")
     (teaches "The value-map gate checks that the offering boundary, effects, fit links, alternatives, and orphan decisions are explicit. Passing confirms a coherent design hypothesis, not proven customer demand.")
-    (kb ad-lib-pitch "Generate three Steve Blank ad-lib variations at gate using ad-lib-formula")
+    (presentation
+      (gate-open "split stickies — Who, Box, Honest read — not diagram, table, or ad-lib dump; linked-from SKILL value-map-gate-review")
+      (expand-fit-links "user asks to walk through Fit links — dash list with indirect, conditional, or weak labels only; never fake direct")
+      (expand-differentiation "user asks about Differentiation — plain comparison to accepted alternatives; no atom IDs")
+      (ad-lib-on-ask "KB ad-lib-pitch fires when user asks ad-lib, pitch, or blank formula — not the gate opening beat"))
+    (kb ad-lib-pitch-on-ask "Generate three Steve Blank ad-lib variations using ad-lib-formula when user asks — never at gate open")
     (asks "Does this value map pass its gate now?")
     (accepts "Records an explicit pass or reopen decision with a reason and target atom; pass requires offering scope, mapped effects, fit links, alternative distinction, and parked orphan candidates or an explicit empty set.")
     (writes "append answers record {atom_id V08, answer accepted text, kind decision, accepted_at current RFC 3339 timestamp}; append decisions record {decision pass or reopen value-map gate, reason accepted reason, source_atom V08, resulting_module value-map, resulting_atom V08 or chosen value-map atom, resulting_status gate_pending or in_progress}; on pass upsert artifacts record {path value-map.md, status pending}; set project.updated_at to accepted_at; set position.module value-map, position.atom_id V08 or chosen value-map atom, position.status gate_pending or in_progress exactly as the decision")

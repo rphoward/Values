@@ -121,7 +121,7 @@ def _prefer_extreme_first(items: list[str]) -> list[str]:
 
 
 def match_board_for_atom(session: dict[str, Any], atom_id: str) -> dict[str, Any] | None:
-    """Agent-internal parts×pains/gains board for V03/V04 voice rendering."""
+    """Agent-internal parts×pains/gains board for pain-reliever and gain-creator match steps."""
     if atom_id not in MATCH_BOARD_ATOMS:
         return None
     target_atom, target_name, link_question = MATCH_BOARD_ATOMS[atom_id]
@@ -191,7 +191,7 @@ def compose_outward_pitch(session: dict[str, Any]) -> str:
 
     Peer Discord voice: short sentences — who, freeze, what you get. So-what
     features into daily relief; never a fourth Connection beat. Prefer
-    stated job (P03) over priority-sequence (P11). When the job is
+    Prefer stated job over priority-sequence when both exist. When the job is
     autonomy-coded, lean on the outward pain so the paste stays aimed outward.
     """
     segment = answer_text(session, "P01")
@@ -300,7 +300,7 @@ def fill_value_trail(session: dict[str, Any]) -> str:
 
 
 def fill_north_star_blurb(session: dict[str, Any]) -> str:
-    """One early paste-ready north-star paragraph (distinct from V08 three ad-libs)."""
+    """One early paste-ready north-star paragraph (distinct from on-ask ad-lib variations)."""
     template = (ASSETS_DIR / "north-star-blurb.template.md").read_text(encoding="utf-8")
     project_name = session.get("project", {}).get("name", "Project")
     paragraph = compose_outward_pitch(session)

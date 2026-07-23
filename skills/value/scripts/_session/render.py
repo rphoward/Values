@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from .catalog import ASSETS_DIR, load_section_map
+from .catalog import ASSETS_DIR, load_section_map, atom_provenance_label
 from .constants import BUILD_PACK_FILES, MILESTONE_TEMPLATES
 from .runtime import (
     current_answer,
@@ -42,7 +42,8 @@ def format_atom_block(
 
 
 def format_answer_block_for_atoms(session: dict[str, Any], atom_ids: list[str]) -> str:
-    return format_atom_block(session, atom_ids, include_atom_ids=True)
+    """Deprecated alias — human artifacts must not include atom IDs."""
+    return format_content_block_for_atoms(session, atom_ids)
 
 
 def format_content_block_for_atoms(session: dict[str, Any], atom_ids: list[str]) -> str:
@@ -93,7 +94,7 @@ def fill_milestone_template(session: dict[str, Any], module: str) -> str:
         elif heading == "Decisions":
             body = format_decisions(session, module)
         else:
-            body = format_answer_block_for_atoms(session, atom_ids)
+            body = format_content_block_for_atoms(session, atom_ids)
         template = fill_section(template, heading, body)
     return template.rstrip() + "\n"
 
@@ -124,7 +125,7 @@ def fill_design_brief(session: dict[str, Any], template_name: str) -> str:
         elif heading == "Accessibility and content implications":
             body = "unknown"
         else:
-            body = format_answer_block_for_atoms(session, atom_ids)
+            body = format_content_block_for_atoms(session, atom_ids)
         template = fill_section(template, heading, body)
         if heading == "Required states":
             for sub in ("Empty", "Loading", "Success", "Error", "Recovery"):
@@ -189,11 +190,16 @@ def plan_hard_decision_adrs(
     for index, item in enumerate(hard, start=1):
         title = item.get("decision", "decision").strip() or "decision"
         path = adr_dir / f"{index:04d}-{slugify_adr(title)}.md"
-        source = item.get("source_atom", "unknown")
+        source = item.get("source_atom", "")
+        provenance = (
+            atom_provenance_label(source)
+            if source
+            else "Accepted session decision"
+        )
         body = (
             f"# {title}\n\n"
             f"{item.get('reason', '').strip() or 'No reason recorded.'}\n\n"
-            f"_Source atom: {source}_\n"
+            f"_Recorded from: {provenance}_\n"
         )
         planned.append((path, body))
     return planned

@@ -20,11 +20,13 @@ metadata:
       (business-model references/business-model.md)
       (experiments references/experiments.md)
       (session-contract references/session-contract.md)
+      (lean-bridge references/lean-bridge.md)
       (export-lenses references/export-lenses.md))
     (assets
       (session-schema assets/session.schema.json)
       (atoms-index assets/atoms.json)
       (knowledge-base assets/knowledge-base.json)
+      (lean-bridge-map assets/lean-bridge-map.json)
       (context-product-template assets/CONTEXT.product.template.md)
       (agents-product-template assets/AGENTS.product.template.md)
       (ui-copy-template assets/ui-copy.template.md)
@@ -43,6 +45,7 @@ metadata:
       (learning-card-template assets/learning-card.template.md))
     (scripts
       (init scripts/init_session.py)
+      (import-lean scripts/import_lean_context.py)
       (status scripts/status.py)
       (next scripts/next_question.py)
       (accept scripts/accept_answer.py)
@@ -67,9 +70,9 @@ metadata:
 
   (protocol-1-activation
     (on-activation
-      1 "read references/session-contract.md for field shapes, evidence kinds, creation, ledger, and script orchestration"
-      2 "when session.json exists run scripts/status.py --brief internally; do not quote its output to the user"
-      3 "when absent follow missing-session creation; ask what the user is working on (display name only); derive slug silently; obtain consent before scripts/init_session.py --name ...")
+      1 "read references/session-contract.md and references/lean-bridge.md for field shapes, evidence kinds, creation, ledger, and script orchestration"
+      2 "when session.json exists run scripts/status.py --brief internally; then scripts/import_lean_context.py <session> internally when lean session exists"
+      3 "when absent follow missing-session creation; ask what the user is working on (display name only); derive slug silently; obtain consent before scripts/init_session.py --name ...; then import_lean_context when lean session exists")
     (session-root "workproduct/value-proposition/<project-slug>/")
     (canonical-state "session.json")
     (kb-load "read assets/knowledge-base.json when applying scales, high-value rubric, BM 0–10 anchors, experiment library, data traps, or validation funnel")
@@ -99,17 +102,42 @@ metadata:
       (edge "what is missing now and why it matters for the next design move — curiosity, not taxonomy labels")
       (question "rephrase asks from scripts/next_question.py JSON; never paste JSON, accepts_summary, or atom IDs unless user asks what counts as an answer")
       (match-board "when next_question JSON includes match_board: render part_labels and target_labels as two plain dash lists (no tables), prefer extreme pains when labeled, then ask the one link question from match_prompt; never quote raw JSON")
-      (forbidden-user-facing "Ledger:, atom=, P08, bombs=, ready_count, focus_atom, slug, path, section strip every turn")
-      (progress-strip "scripts/status.py --sections only on resume, when user asks where am I, or after a module gate — not every turn")
+      (forbidden-user-facing "Ledger:, atom=, atom IDs (P01, V01, B01, E01, etc.), bombs=, ready_count, focus_atom, slug, path, section strip every turn")
+      (progress-strip "on resume, when user asks where am I / progress, or after a module gate: run scripts/status.py --sections and show that one strip line to the user; never every turn; never quote --brief or --operator")
       (express "skip warm bridge; still one human question"))
     (scripts-silent
       (run "status --brief, next_question, accept_answer, gaps, bulk — parse JSON or brief lines internally")
       (never "quote script stdout verbatim to the user"))
     (shape
       1 "run scripts/status.py --brief and scripts/next_question.py internally"
-      2 "compose voice-recipe paragraph for the user; on V03/V04 include sticky match lists then one link question"
+      2 "compose voice-recipe paragraph for the user; when next_question includes match_board for pain relievers or gain creators, render sticky match lists then one link question"
       3 "micro-lesson only when user asks to teach, on first visit to a section, or at gate review — not every turn"
       4 "wait for the user's answer")
+  (value-map-gate-review
+    (trigger "value-map gate review is active or the user reopened the value-map gate — gate only, not every turn")
+    (user-language "progress-strip section names only — Offering, Pain relievers, Gain creators, Fit links, Orphan candidates, Differentiation; never atom IDs, internal codes, or cryptic shorthands to the user")
+    (turn-1-flow
+      1 "run scripts/status.py --sections internally; show progress-strip using those section names"
+      2 "Who sticky — segment + freeze in short peer sentences"
+      3 "Box sticky — four offering parts as plain dash list, max ~10 words per line per cognitive_murder"
+      4 "Honest read — thin gain creators, hypothesis labels, orphan status, one sentence on how this differs from what they do today"
+      5 "offer optional depth in plain English: user may ask to walk through Fit links or Differentiation before answering; then ask Does this value map pass its gate now?")
+    (expand-fit-links
+      (trigger "user asks to walk through fit links, how offering pieces connect to pains and gains, or connection strengths")
+      (emit "dash list from accepted fit-links state; label each chain indirect, conditional, or weak — never fake direct"))
+    (expand-differentiation
+      (trigger "user asks about differentiation, alternatives, or how this beats what they do today")
+      (emit "plain comparison against accepted alternatives from session wording — no atom IDs"))
+    (ad-lib-on-ask "KB ad-lib-pitch fires only when user asks ad-lib, pitch, or blank formula — never at gate open")
+    (forbidden-at-gate
+      'mermaid-diagrams
+      'tables
+      'full-canvas-matrix-or-scorecard
+      'monolithic-ad-lib-paragraph
+      'three-blank-ad-libs-at-gate-open
+      'ad-lib-dump-before-pass-question
+      'atom-ids-or-internal-codes-to-user
+      'cryptic-drill-triggers))
   (draft-map-gap-fill
     (trigger "user brain dump, map what I said, here's what I know, or explicit batching request")
     (flow
@@ -121,15 +149,15 @@ metadata:
     (trigger "user invokes /value with a decision mid-repo — should I add X, who is this for")
     (flow
       1 "scripts/status.py --brief and --sections plus read session.json internally"
-      2 "if segment satisfied do not restart at P01; frame the decision against locked segment + priority job + accepted P09 alternatives when present (session wording — never hardcode fixed alternative names)"
+      2 "if segment is satisfied do not restart at segment; frame the decision against locked segment + priority job + accepted alternatives when present (session wording — never hardcode fixed alternative names)"
       3 "ask one decision-framed question; dispositions (serves outward value / park as orphan / record unknown) live inside that turn's answer — not a multi-prompt menu"
       4 "never emit full canvas; never invent missing profile state; never treat Values as an autonomy or creativity coach for the product"))
   (express-pacing
     (trigger "user asks to move fast, skip nuance, or gate-only path before session exists or mid-session")
     (init "scripts/init_session.py --pacing-mode express after consent")
     (switch "scripts/set_pacing_mode.py --mode express|standard; recompute focus immediately")
-    (spine "profile P01 P03 P11 P12; value-map V01 V08; business-model B01 B08; experiments E01 E03 E10")
-    (gate-review "gate pass still requires explicit unknowns for skipped profile areas; do not invent facts"))
+    (spine "agent-internal schedulable atoms only — profile segment jobs priority-job profile-gate; value-map offering through value-map gate; business-model delivery through business-model gate; experiments hypothesis through experiments gate; never quote spine codes to the user")
+    (gate-review "gate pass still requires explicit unknowns for skipped profile areas; do not invent facts; value-map gate uses value-map-gate-review stickies — no Mermaid, tables, ad-lib wall, atom IDs, or cryptic triggers at gate open"))
   (batching "draft-map-gap-fill only unless user explicitly requests batching")
   (follow-up "when answer is vague on a hard atom: one focused follow-up; soft atoms accept kind unknown for taxonomy nuance")
   (acceptance "advance when the active atom's (accepts ...) criteria are met or soft atom accepts unknown labels; then scripts/accept_answer.py on any ready atom")
@@ -139,9 +167,10 @@ metadata:
     (run "accept_answer.py --reopen --conflict-note; do not re-ask answered atoms otherwise")
     (post-fix "after the supersede lands: one short line that the change is locked and they can say revise <area> anytime — not a every-turn prefix or banner")
     (forbidden 're-ask-without-reopen 'prefix-notification-every-turn 'one-turn-only-edit-unless-explicitly-requested))
-  (forbidden 'emit-full-canvas-matrix-or-scorecard-before-required-answers 're-ask-without-reopen))
+  (forbidden 'emit-full-canvas-matrix-or-scorecard-before-required-answers 're-ask-without-reopen 'mermaid-or-tables-at-value-map-gate 'ad-lib-wall-at-value-map-gate-open))
 
   (protocol-4-answer-and-state
+    (human-artifacts "milestones, design briefs, build pack, and ADRs use section headings and customer language only — never atom IDs, source_atom codes, or curriculum numbers in bodies the user may open")
     (evidence-kinds fact inference hypothesis decision unknown)
     (on-accept
       1 "run scripts/accept_answer.py with atom_id, answer, kind, and optional --records JSON sidecar"
@@ -153,6 +182,7 @@ metadata:
       (run "scripts/write_milestone.py --module <module>")
       (note "write_milestone also refreshes the build pack including north-star-blurb.md")
       (surface-north-star "after milestone refresh, quote ## Blurb and ## Install from north-star-blurb.md once in chat — paste-ready, not a path scavenger hunt; add one short line naming which value-trail section titles grew")
+      (surface-strip "run scripts/status.py --sections and show that one strip line to the user")
       (outcome "derive completed from gate decision plus final milestone artifact"))
     (completion-briefs
       (gate-prerequisite "profile, value-map, business-model, and experiments must each be completed or explicitly bypassed")
@@ -180,8 +210,8 @@ metadata:
       (return "resume current profile atom or active atom after capture"))
     (autonomy
       (allow "profile may hold autonomy as a job, gain, or priority-sequence need")
-      (park "park autonomy-as-offering when the user proposes autonomy, creativity, or liberty as the offering or expands V01 into an autonomy product; steer back to outward value for someone else")
-      (forbidden 'silent-expansion-of-offering-into-autonomy-coaching-without-reopen-V01))
+      (park "park autonomy-as-offering when the user proposes autonomy, creativity, or liberty as the offering or expands offering boundary into an autonomy product; steer back to outward value for someone else")
+      (forbidden 'silent-expansion-of-offering-into-autonomy-coaching-without-reopen-offering-boundary))
     (bypass
       (require "one explicit decision record per waived module using decision bypass <module> gate, reason, source_atom, resulting_module, resulting_atom, resulting_status")
       (result "move to the named resulting module and atom with the recorded status")
@@ -190,12 +220,12 @@ metadata:
   (protocol-6-resume-and-failure
     (resume
       1 "run scripts/status.py --brief and scripts/status.py --sections internally"
-      2 "report last accepted decision in one sentence using section names, not atom IDs; optional section strip for user"
+      2 "report last accepted decision in one sentence using section names, not atom IDs; then show the one --sections strip line to the user"
       3 "run scripts/next_question.py and ask via voice-recipe")
     (pause
       (trigger "user says break, pause, stop for now, or close")
-      (run "scripts/write_build_pack.py --force")
-      (speak "one human sentence naming what endured and where we left off — section name, not atom IDs; do not list every output path")
+      (run "scripts/status.py --sections then scripts/write_build_pack.py --force")
+      (speak "one human sentence naming what endured and where we left off — section name, not atom IDs; show the one --sections strip line; do not list every output path")
       (then "quote ## Blurb and ## Install from the refreshed north-star-blurb.md in chat so paste does not require opening the file or a canvas; add one short line naming which value-trail section titles grew — do not paste the full trail"))
     (missing-session
       "ask what the user is working on (display name only); derive slug silently; wait for consent; then scripts/init_session.py --name ..."

@@ -16,13 +16,13 @@
 
   (section Glossary_Lens
     (principle "Emit CONTEXT.product.md as a customer-domain glossary only.")
-    (trigger "Profile gate complete, or P01–P03 plus named pains/gains; or user asks for shared language.")
+    (trigger "Profile gate complete, or Segment through Jobs plus named pains/gains; or user asks for shared language.")
     (guiding_principle "One term per concept. Define what it IS in the customer's world. Never put stack or UI chrome here. Prefer customer words from accepted answers."))
 
   (section Decision_Lens
     (principle "Emit short ADRs under docs/adr/ for hard-to-reverse Value decisions.")
     (trigger "decisions[] with bypass, orphan, segment boundary, exclusion, park, or out of scope.")
-    (guiding_principle "One paragraph: context, decision, why. Skip soft atom accepts. Cite source_atom for agents."))
+    (guiding_principle "One paragraph: context, decision, why. Skip soft accepts. Record provenance as module and section name — never atom IDs."))
 
   (section Agent_Boundary_Lens
     (principle "Emit AGENTS.product.md with Always / Ask first / Never.")
@@ -31,7 +31,7 @@
 
   (section UI_State_Lens
     (principle "Emit states-and-flows.md for 1–3 critical paths with required states.")
-    (trigger "P02–P03 accepted and a pain reliever or gain creator exists; or UX handoff.")
+    (trigger "Situation and Jobs accepted and a pain reliever or gain creator exists; or UX handoff.")
     (guiding_principle "Follow job progress, not sitemap. Weight Empty and Error. Cap at critical paths."))
 
   (section UI_Copy_Lens
@@ -47,14 +47,14 @@
   (section Value_Trail_Lens
     (principle "Emit value-trail.md as the intentional-value spine — sticky progressive crumbs, not a path dump.")
     (trigger "every build-pack refresh including --force on pause; grows as profile and value-map answers land.")
-    (guiding_principle "One section per answered crumb in registry order. Sticky customer language with evidence kind. Outward pitch paragraph shared with north-star blurb body. Progressive disclosure like cognitive_murder; segment fit like pregnant_man_trap and fit_check_rules; no spreadsheet_mirage precision. Do not emit V08 three ad-libs, atom IDs, or Ledger lines.")
+    (guiding_principle "One section per answered crumb in registry order. Sticky customer language with evidence kind. Outward pitch paragraph shared with north-star blurb body. Progressive disclosure like cognitive_murder; segment fit like pregnant_man_trap and fit_check_rules; no spreadsheet_mirage precision. Do not emit ad-lib variations, atom IDs, or Ledger lines.")
     (surface "on-ask for trail, breadcrumbs, value record, marketing, or ads — quote trail or newest crumbs in chat; on pause/milestone quote Discord blurb plus one short line naming which trail section titles grew — never paste the full trail")
     (forbidden 'claim-validated-demand 'path-only-without-quoting-trail 'requiring-a-canvas 'install-cta-in-trail))
 
   (section North_Star_Lens
     (principle "Emit north-star-blurb.md as Discord paste lens: outward pitch paragraph plus install CTA only here.")
     (trigger "every build-pack run including --force on pause; also after profile milestone so a blurb exists before value-map completes.")
-    (guiding_principle "Body from value-trail outward_pitch crumb (who P01, job P03 then P11, why P07 extreme-first / P08). Peer Discord voice: who + freeze + what you get. Prefer P03 over P11; when job is autonomy-coded lean on outward pain. Strip interview labels. Soft-trim at a clause, never mid-label garbage. Plain Discord text. Mark draft from accepted session state. Do not duplicate V08 three Blank ad-lib variations.")
+    (guiding_principle "Body from value-trail outward_pitch crumb (who from Segment, job from Jobs then priority job, why from Pains extreme-first / Gains). Peer Discord voice: who + freeze + what you get. Prefer stated job over priority-sequence when both exist; when job is autonomy-coded lean on outward pain. Strip interview labels. Soft-trim at a clause, never mid-label garbage. Plain Discord text. Mark draft from accepted session state. Do not duplicate Steve Blank ad-lib variations.")
     (voice
       (role "peer builder in Discord — stark literal facts aimed at daily relief, not pitch enthusiasm")
       (shape "who + freeze + what you get — Connection is a private so-what check, never a fourth written beat")
